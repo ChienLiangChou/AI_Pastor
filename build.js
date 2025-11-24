@@ -12,10 +12,10 @@ const path = require('path');
 function loadEnv() {
     const envPath = path.join(__dirname, '.env');
     
+    // 如果沒有 .env 檔案，返回空物件（Vercel 上使用環境變數）
     if (!fs.existsSync(envPath)) {
-        console.error('❌ 找不到 .env 檔案');
-        console.log('💡 請先複製 .env.example 為 .env 並填入您的 API Key');
-        process.exit(1);
+        console.log('⚠️  找不到 .env 檔案，使用環境變數（適用於 Vercel 部署）');
+        return {};
     }
 
     const envContent = fs.readFileSync(envPath, 'utf-8');
@@ -52,6 +52,7 @@ function buildHTML() {
     console.log('📖 讀取 index.html...');
     let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
 
+    // 在 Vercel 上，使用相對路徑（同域 API），不需要注入 API_BASE_URL
     // 如果設定了 API_BASE_URL，優先使用後端代理模式
     if (apiBaseUrl) {
         console.log('🔒 使用後端代理模式（推薦，安全）');
@@ -71,25 +72,23 @@ function buildHTML() {
             console.log('✅ 已停用前端 API Key（使用後端代理）');
         }
     } else {
-        // 使用前端 API Key 模式（僅本地開發，不推薦公開）
-        console.warn('⚠️  使用前端 API Key 模式（僅限本地開發，不適合公開部署）');
+        // 在 Vercel 上，使用相對路徑（同域 API），不需要前端 API Key
+        console.log('🔒 使用相對路徑模式（Vercel 部署，使用 serverless functions）');
         
-        if (!apiKey || apiKey.includes('在此處貼上') || apiKey.trim() === '') {
-            console.error('❌ API Key 未設定或無效');
-            console.log('💡 請在 .env 檔案中設定 GOOGLE_API_KEY');
-            console.log('💡 或設定 API_BASE_URL 使用後端代理（推薦）');
-            process.exit(1);
-        }
-
-        // 替換 API Key
+        // 確保 GOOGLE_API_KEY 設為 null（不使用前端 API Key）
         const apiKeyPattern = /const GOOGLE_API_KEY = window\.GOOGLE_API_KEY \|\| .*?;/;
-        const replacement = `const GOOGLE_API_KEY = window.GOOGLE_API_KEY || "${apiKey}";`;
-        
+        const apiKeyReplacement = `const GOOGLE_API_KEY = window.GOOGLE_API_KEY || null;`;
         if (apiKeyPattern.test(htmlContent)) {
-            htmlContent = htmlContent.replace(apiKeyPattern, replacement);
-            console.log('✅ API Key 已注入（前端模式）');
-        } else {
-            console.warn('⚠️  無法找到 API Key 配置區域，請檢查 HTML 檔案格式');
+            htmlContent = htmlContent.replace(apiKeyPattern, apiKeyReplacement);
+            console.log('✅ 已停用前端 API Key（使用 serverless functions）');
+        }
+        
+        // 確保 API_BASE_URL 為空（使用相對路徑）
+        const apiBaseUrlPattern = /const API_BASE_URL = window\.API_BASE_URL \|\| '.*?';/;
+        const apiBaseUrlReplacement = `const API_BASE_URL = window.API_BASE_URL || '';`;
+        if (apiBaseUrlPattern.test(htmlContent)) {
+            htmlContent = htmlContent.replace(apiBaseUrlPattern, apiBaseUrlReplacement);
+            console.log('✅ API_BASE_URL 已設為空（使用相對路徑）');
         }
     }
 

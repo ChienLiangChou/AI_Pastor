@@ -35,9 +35,9 @@
         // 設定區域 (Configuration)
         // =========================================================================
         // 使用後端代理 API（API Key 安全保護在伺服器端）
-        // 如果使用後端伺服器，請設定 API_BASE_URL
-        // 如果直接使用前端（不推薦公開），請設定 GOOGLE_API_KEY
-        const API_BASE_URL = window.API_BASE_URL || ''; // 例如: 'http://localhost:3000' 或 'https://your-domain.com'
+        // 在 Vercel 上，使用相對路徑自動指向同域的 API
+        // 本地開發時，可以設定 API_BASE_URL 指向本地伺服器
+        const API_BASE_URL = window.API_BASE_URL || ''; // 例如: 'http://localhost:3000' 或留空使用相對路徑（Vercel）
         const GOOGLE_API_KEY = window.GOOGLE_API_KEY || null; // 僅用於本地開發，不建議公開使用
 
         // =========================================================================
@@ -91,22 +91,29 @@
 
         const callGeminiAPI = async (prompt, history, mode) => {
             // 優先使用後端代理 API（安全）
-            if (API_BASE_URL) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/chat`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt, history, mode })
-                    });
+            // 如果設定了 API_BASE_URL，使用它；否則使用相對路徑（適用於 Vercel）
+            const apiUrl = API_BASE_URL ? `${API_BASE_URL}/api/chat` : '/api/chat';
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, history, mode })
+                });
 
-                    if (!response.ok) {
-                        const errData = await response.json().catch(() => ({}));
-                        throw new Error(errData.error || `伺服器錯誤: ${response.status}`);
-                    }
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `伺服器錯誤: ${response.status}`);
+                }
 
-                    const data = await response.json();
-                    return { text: data.text, grounding: data.grounding || [] };
-                } catch (error) {
+                const data = await response.json();
+                return { text: data.text, grounding: data.grounding || [] };
+            } catch (error) {
+                // 如果後端 API 失敗且沒有設定 API_BASE_URL，嘗試降級到直接 API 調用
+                if (!API_BASE_URL && GOOGLE_API_KEY) {
+                    console.warn('後端 API 失敗，嘗試直接調用...');
+                    // 繼續執行下面的直接 API 調用邏輯
+                } else {
                     throw new Error(`後端 API 錯誤: ${error.message}`);
                 }
             }
