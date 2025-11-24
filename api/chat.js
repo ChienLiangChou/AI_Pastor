@@ -260,9 +260,11 @@ Your task is to answer the user's questions, combining biblical truth with real-
 
 8. **Language:** Respond in the same language as the user's question. If the user asks in English, respond in English. If the user asks in Chinese, respond in Traditional Chinese.
 
-9. **Source Declaration:** At the beginning of your response, clearly state which sources you are using:
-   - If using web search results: "本回答結合聖經與網路資訊（聖經+網路模式）" (Chinese) or "This answer combines Bible and web information (Bible + Web mode)" (English)
-   - List all web sources used in your response
+9. **Source Declaration (MANDATORY):** At the VERY BEGINNING of your response, you MUST clearly state which sources you are using:
+   - If web search results are provided and used: "本回答結合聖經與網路資訊（聖經+網路模式）" (Chinese) or "This answer combines Bible and web information (Bible + Web mode)" (English)
+   - If NO web search results are provided or available: "本回答僅使用聖經資訊（唯獨聖經模式）" (Chinese) or "This answer uses Bible-only information (Bible Only mode)" (English)
+   - This declaration MUST be the first line or first paragraph of your response
+   - List all web sources used in your response (if any)
 
 10. **Disclaimer:** Always end your response with the disclaimer about seeking help from a real pastor at church.
 `;
@@ -327,7 +329,11 @@ export default async function handler(req, res) {
                     ? '（使用 SerpAPI 搜索）' 
                     : '（使用 DuckDuckGo 搜索）';
                 
-                systemInstruction += `\n\n**當前搜索結果（必須使用）${sourceInfo}：**\n${searchContext}\n\n**重要：你必須使用這些搜索結果來回答問題。在回答中明確標註所有使用的網路資訊來源，格式為：【網路資訊來源】標題: [title], 網址: [url]**`;
+                systemInstruction += `\n\n**當前搜索結果（必須使用）${sourceInfo}：**\n${searchContext}\n\n**重要規則：**
+1. 你必須在回答的開頭明確標註：「本回答結合聖經與網路資訊（聖經+網路模式）」
+2. 你必須使用這些搜索結果來回答問題
+3. 在回答中明確標註所有使用的網路資訊來源，格式為：【網路資訊來源】標題: [title], 網址: [url]
+4. 結合聖經經文與網路資訊，提供完整的回答`;
                 
                 // 提取 grounding 資訊
                 grounding = searchResults.map(result => ({
@@ -342,11 +348,14 @@ export default async function handler(req, res) {
                 console.log('所有搜索方法都失敗了');
                 
                 // 如果搜索失敗，明確告知用戶並提供選項
-                systemInstruction += `\n\n**重要通知：** 目前無法使用網路搜索功能。請告知用戶：
-1. 現在無法使用網路的資訊
-2. 詢問用戶是否可以稍後再試，或者
-3. 詢問用戶是否願意只使用聖經資訊來回答問題
-請用友善、理解的語氣告知用戶這個情況。`;
+                systemInstruction += `\n\n**重要規則（搜索失敗）：**
+1. 你必須在回答的開頭明確標註：「本回答僅使用聖經資訊（唯獨聖經模式）」
+2. 目前無法使用網路搜索功能，因此你只能使用聖經資訊來回答
+3. 請用友善、理解的語氣告知用戶：
+   - 現在無法使用網路的資訊
+   - 詢問用戶是否可以稍後再試，或者
+   - 說明你將僅使用聖經資訊來回答問題
+4. 確保你的回答完全基於聖經經文，並引用具體的章節和經文`;
             }
         } catch (error) {
             searchFailed = true;
@@ -354,11 +363,14 @@ export default async function handler(req, res) {
             console.error('搜索過程出錯:', error);
             
             // 如果搜索失敗，明確告知用戶並提供選項
-            systemInstruction += `\n\n**重要通知：** 目前無法使用網路搜索功能。請告知用戶：
-1. 現在無法使用網路的資訊
-2. 詢問用戶是否可以稍後再試，或者
-3. 詢問用戶是否願意只使用聖經資訊來回答問題
-請用友善、理解的語氣告知用戶這個情況。`;
+            systemInstruction += `\n\n**重要規則（搜索失敗）：**
+1. 你必須在回答的開頭明確標註：「本回答僅使用聖經資訊（唯獨聖經模式）」
+2. 目前無法使用網路搜索功能，因此你只能使用聖經資訊來回答
+3. 請用友善、理解的語氣告知用戶：
+   - 現在無法使用網路的資訊
+   - 詢問用戶是否可以稍後再試，或者
+   - 說明你將僅使用聖經資訊來回答問題
+4. 確保你的回答完全基於聖經經文，並引用具體的章節和經文`;
         }
     }
 
