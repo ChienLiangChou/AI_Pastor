@@ -47,39 +47,62 @@
                 height: 100dvh; /* 使用動態視窗高度，考慮瀏覽器 UI */
             }
             
-            /* 固定 header 高度 */
+            /* 固定 header 高度 - 進一步減少 */
             header {
-                height: 44px !important;
-                min-height: 44px !important;
-                max-height: 44px !important;
+                height: 38px !important;
+                min-height: 38px !important;
+                max-height: 38px !important;
+                padding: 0.25rem 0.5rem !important;
             }
             
-            /* 固定模式切換高度 */
+            /* Header 標題文字更小 */
+            header h1 {
+                font-size: 0.75rem !important;
+                line-height: 1.2 !important;
+            }
+            
+            /* 固定模式切換高度 - 進一步減少 */
             .mode-toggle-container {
-                height: 40px !important;
-                min-height: 40px !important;
-                max-height: 40px !important;
+                height: 36px !important;
+                min-height: 36px !important;
+                max-height: 36px !important;
+                padding: 0.25rem !important;
             }
             
-            /* 固定輸入區域高度 - 減少 padding 以確保所有元素可見 */
+            /* 模式切換按鈕更小 */
+            .mode-toggle-container button {
+                padding: 0.25rem 0.5rem !important;
+                font-size: 0.7rem !important;
+            }
+            
+            /* 固定輸入區域高度 - 進一步減少 */
             .input-container {
-                min-height: 70px !important;
-                max-height: 70px !important;
-                padding: 0.5rem !important;
+                min-height: 60px !important;
+                max-height: 60px !important;
+                padding: 0.375rem !important;
             }
             
-            /* 計算聊天區域高度：100vh - header(44px) - mode toggle(40px) - input(70px) */
+            /* 計算聊天區域高度：100vh - header(38px) - mode toggle(36px) - input(60px) */
             .chat-area {
-                height: calc(100vh - 44px - 40px - 70px) !important;
-                height: calc(100dvh - 44px - 40px - 70px) !important;
+                height: calc(100vh - 38px - 36px - 60px) !important;
+                height: calc(100dvh - 38px - 36px - 60px) !important;
                 min-height: 0 !important;
+                overflow-y: auto !important;
             }
             
             /* 確保 textarea 在輸入容器內正確顯示 */
             .input-container textarea {
-                max-height: 3rem !important;
-                padding-top: 0.5rem !important;
-                padding-bottom: 0.5rem !important;
+                max-height: 2.5rem !important;
+                padding-top: 0.375rem !important;
+                padding-bottom: 0.375rem !important;
+                font-size: 0.8rem !important;
+                line-height: 1.3 !important;
+            }
+            
+            /* 確保主容器使用正確的高度 */
+            .flex.flex-col.h-screen {
+                height: 100vh !important;
+                height: 100dvh !important;
             }
         }
         
@@ -435,10 +458,10 @@ Your task is to answer the user's questions, combining biblical truth with broad
             return (
                 <div className="flex flex-col h-screen w-full max-w-4xl mx-auto shadow-2xl bg-[#faf9f6] overflow-hidden">
                     {/* Header - 極致緊湊的設計，確保模式切換和輸入框可見 */}
-                    <header className="bg-slate-900 text-amber-50 px-2 sm:px-4 py-0.5 sm:py-1.5 shadow-md flex items-center justify-between z-10 shrink-0" style={{ height: '44px', minHeight: '44px', maxHeight: '44px' }}>
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                            <div className="bg-amber-600 p-1 sm:p-1.5 rounded-lg shrink-0">
-                                <Icon name="cross" size={14} className="sm:w-5 sm:h-5 text-white" />
+                    <header className="bg-slate-900 text-amber-50 px-2 sm:px-4 py-0.5 sm:py-1.5 shadow-md flex items-center justify-between z-10 shrink-0" style={{ height: '38px', minHeight: '38px', maxHeight: '38px' }}>
+                        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+                            <div className="bg-amber-600 p-0.5 sm:p-1 rounded-lg shrink-0">
+                                <Icon name="cross" size={12} className="sm:w-4 sm:h-4 text-white" />
                             </div>
                             <div className="min-w-0">
                                 <h1 className="text-xs sm:text-base md:text-xl font-bold tracking-wide font-serif truncate">AI 牧師</h1>
@@ -446,38 +469,38 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             </div>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                            <span className="text-[10px] sm:text-xs text-amber-200/70 whitespace-nowrap">按這裡清除所有對話紀錄</span>
                             <button
                                 onClick={clearHistory}
-                                className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-colors px-1.5 sm:px-2 py-1 rounded hover:bg-amber-800/30 active:bg-amber-800/50"
+                                className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-colors px-1 sm:px-1.5 py-0.5 rounded hover:bg-amber-800/30 active:bg-amber-800/50 shrink-0"
                                 title="清除對話記錄"
                             >
-                                <Icon name="trash-2" size={12} className="sm:w-3.5 sm:h-3.5 inline mr-0.5 sm:mr-1" />
-                                <span className="hidden sm:inline">清除</span>
+                                <Icon name="trash-2" size={12} className="sm:w-3.5 sm:h-3.5" />
                             </button>
                             <div className="text-xs text-slate-400 hidden sm:block">訪客模式</div>
                         </div>
                     </header>
 
                     {/* Mode Toggle - 極致緊湊的設計，確保與輸入框同時可見 */}
-                    <div className="mode-toggle-container bg-stone-100 p-0.5 sm:p-1.5 border-b border-stone-200 flex justify-center shrink-0" style={{ height: '40px', minHeight: '40px', maxHeight: '40px' }}>
+                    <div className="mode-toggle-container bg-stone-100 p-0.5 sm:p-1.5 border-b border-stone-200 flex justify-center shrink-0" style={{ height: '36px', minHeight: '36px', maxHeight: '36px' }}>
                          <div className="flex bg-stone-200 p-0.5 sm:p-1 rounded-lg w-full max-w-md">
                             <button
                                 onClick={() => setMode('bible-only')}
-                                className={`flex-1 flex items-center justify-center px-1.5 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md text-xs sm:text-sm font-medium transition-all active:scale-95 ${
+                                className={`flex-1 flex items-center justify-center px-1 sm:px-2 md:px-4 py-0.5 sm:py-1 md:py-2 rounded-md text-[10px] sm:text-xs md:text-sm font-medium transition-all active:scale-95 ${
                                     mode === 'bible-only' ? 'bg-white text-amber-800 shadow-sm' : 'text-stone-500'
                                 }`}
                             >
-                                <Icon name="book-open" size={11} className="sm:w-4 sm:h-4 mr-0.5 sm:mr-1.5" /> 
-                                <span className="whitespace-nowrap text-xs sm:text-sm">唯獨聖經</span>
+                                <Icon name="book-open" size={10} className="sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1" /> 
+                                <span className="whitespace-nowrap text-[10px] sm:text-xs md:text-sm">唯獨聖經</span>
                             </button>
                             <button
                                 onClick={() => setMode('bible-plus')}
-                                className={`flex-1 flex items-center justify-center px-1.5 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-md text-xs sm:text-sm font-medium transition-all active:scale-95 ${
+                                className={`flex-1 flex items-center justify-center px-1 sm:px-2 md:px-4 py-0.5 sm:py-1 md:py-2 rounded-md text-[10px] sm:text-xs md:text-sm font-medium transition-all active:scale-95 ${
                                     mode === 'bible-plus' ? 'bg-white text-blue-700 shadow-sm' : 'text-stone-500'
                                 }`}
                             >
-                                <Icon name="globe" size={11} className="sm:w-4 sm:h-4 mr-0.5 sm:mr-1.5" /> 
-                                <span className="whitespace-nowrap text-xs sm:text-sm">聖經+網路</span>
+                                <Icon name="globe" size={10} className="sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1" /> 
+                                <span className="whitespace-nowrap text-[10px] sm:text-xs md:text-sm">聖經+網路</span>
                             </button>
                         </div>
                     </div>
@@ -503,8 +526,8 @@ Your task is to answer the user's questions, combining biblical truth with broad
                     </div>
 
                     {/* Input Area - 固定在底部，支援多行輸入（3行） */}
-                    <div className="input-container bg-white border-t border-stone-200 shrink-0 safe-area-inset-bottom" style={{ minHeight: '70px', maxHeight: '70px', padding: '0.5rem' }}>
-                        <form onSubmit={handleSend} className="relative flex items-end gap-1.5 sm:gap-2">
+                    <div className="input-container bg-white border-t border-stone-200 shrink-0 safe-area-inset-bottom" style={{ minHeight: '60px', maxHeight: '60px', padding: '0.375rem' }}>
+                        <form onSubmit={handleSend} className="relative flex items-end gap-1 sm:gap-2">
                             <div className="flex-1 relative">
                                 <textarea
                                     value={input}
@@ -518,13 +541,13 @@ Your task is to answer the user's questions, combining biblical truth with broad
                                     }}
                                     placeholder="請輸入您的問題..."
                                     rows={3}
-                                    className="w-full py-1.5 sm:py-2 md:py-3 pl-3 sm:pl-4 md:pl-5 pr-9 sm:pr-11 md:pr-14 rounded-2xl bg-stone-100 border border-stone-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-100 outline-none transition-all text-sm sm:text-base resize-none overflow-y-auto font-serif"
+                                    className="w-full py-1 sm:py-1.5 md:py-3 pl-2 sm:pl-4 md:pl-5 pr-8 sm:pr-11 md:pr-14 rounded-2xl bg-stone-100 border border-stone-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-100 outline-none transition-all resize-none overflow-y-auto font-serif"
                                     disabled={isLoading}
                                     style={{ 
-                                        minHeight: '2.5rem', 
-                                        maxHeight: '3rem',
-                                        lineHeight: '1.4',
-                                        fontSize: '14px'
+                                        minHeight: '2.25rem', 
+                                        maxHeight: '2.5rem',
+                                        lineHeight: '1.3',
+                                        fontSize: '0.8rem'
                                     }}
                                 />
                             </div>
