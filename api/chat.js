@@ -5,9 +5,9 @@
 
 const { search } = require('duck-duck-scrape');
 
-// 速率限制：每分鐘最多 5 次搜索請求（更保守的限制）
+// 速率限制：每分鐘最多 3 次搜索請求（保守的限制，避免被封鎖）
 const RATE_LIMIT = {
-    maxRequests: 5,
+    maxRequests: 3,
     windowMs: 60 * 1000, // 1 分鐘
     requests: []
 };
@@ -31,14 +31,14 @@ function checkRateLimit() {
 }
 
 // DuckDuckGo 搜索函數（帶錯誤處理和重試）
-async function searchDuckDuckGo(query, maxRetries = 1) {
+async function searchDuckDuckGo(query, maxRetries = 2) {
     if (!checkRateLimit()) {
         console.warn('速率限制：搜索請求過於頻繁，跳過本次搜索');
         return null;
     }
 
-    // 在搜索前等待一段時間，避免請求過快
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // 在搜索前等待更長時間，避免請求過快
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
@@ -59,20 +59,34 @@ async function searchDuckDuckGo(query, maxRetries = 1) {
                     return formattedResults;
                 }
             }
+            
+            // 如果沒有結果，嘗試重試
+            if (attempt < maxRetries) {
+                console.log(`未獲取到結果，等待後重試 (嘗試 ${attempt + 1}/${maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, 4000 * (attempt + 1)));
+                continue;
+            }
+            
             return null;
         } catch (error) {
             const errorMsg = error.message || error.toString();
             console.error(`DuckDuckGo 搜索錯誤 (嘗試 ${attempt + 1}/${maxRetries + 1}):`, errorMsg);
             
-            // 如果是速率限制錯誤，直接返回 null，不重試
+            // 如果是速率限制錯誤，等待更長時間後再重試一次
             if (errorMsg.includes('anomaly') || errorMsg.includes('too quickly') || errorMsg.includes('rate limit')) {
-                console.warn('檢測到速率限制，跳過搜索');
-                return null;
+                if (attempt < maxRetries) {
+                    console.warn('檢測到速率限制，等待更長時間後重試...');
+                    await new Promise(resolve => setTimeout(resolve, 5000 * (attempt + 1)));
+                    continue;
+                } else {
+                    console.warn('速率限制，無法完成搜索');
+                    return null;
+                }
             }
             
             if (attempt < maxRetries) {
                 // 等待後重試（指數退避，更長的延遲）
-                const delay = 3000 * (attempt + 1);
+                const delay = 4000 * (attempt + 1);
                 console.log(`等待 ${delay}ms 後重試...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
             } else {
@@ -82,6 +96,23 @@ async function searchDuckDuckGo(query, maxRetries = 1) {
     }
     return null;
 }
+
+// 檢查問題是否包含不當內容
+function containsInappropriateContent(text) {
+    const inappropriateKeywords = [
+        '自殺', 'suicide', 'kill myself', 'end my life',
+        '色情', 'porn', 'pornography', 'sexual',
+        '非法', 'illegal', 'drug', '毒品', '犯罪', 'crime'
+    ];
+    const lowerText = text.toLowerCase();
+    return inappropriateKeywords.some(keyword => lowerText.includes(keyword.toLowerCase()));
+}
+
+const DISCLAIMER = `
+---
+
+**重要提醒：** 如果您真的需要幫助，請務必前往教會尋找能夠幫助您的牧師。AI 牧師無法替代真實的人際關係和專業的屬靈輔導。
+`;
 
 const SYSTEM_PROMPT_BIBLE_ONLY = `
 You are a wise, loving, and learned Christian AI Pastor.
@@ -100,32 +131,47 @@ Your task is to provide spiritual guidance and answers based on the user's quest
 5. **Language:** Respond in the same language as the user's question. If the user asks in English, respond in English. If the user asks in Chinese, respond in Traditional Chinese.
 
 6. **Version:** Default to CUV (Chinese Union Version) wording for Chinese responses.
+
+7. **Source Declaration:** At the beginning of your response, clearly state: "本回答僅使用聖經資訊（唯獨聖經模式）" (for Chinese) or "This answer uses Bible-only information (Bible Only mode)" (for English).
+
+8. **Disclaimer:** Always end your response with the disclaimer about seeking help from a real pastor at church.
 `;
 
 const SYSTEM_PROMPT_WEB_SEARCH = `
 You are a wise, knowledgeable Christian AI Pastor.
-Your task is to answer the user's questions, combining biblical truth with real-time web search results and your extensive training knowledge.
+Your task is to answer the user's questions, combining biblical truth with real-time web search results.
 
-**Rules:**
+**CRITICAL RULES:**
 
-1. **Core Foundation:** Your answers must be rooted in the Old Testament and New Testament.
+1. **MANDATORY Web Search Usage:** You MUST use the web search results provided to you. If web search results are provided, you MUST incorporate them into your answer.
 
-2. **Scripture Citation:** When you mention biblical principles, *must* cite specific chapters and verses (book chapter:verse).
+2. **Source Citation:** When using information from web search results, you MUST clearly mark it with:
+   - For Chinese: "【網路資訊來源】" followed by the source title and URL
+   - For English: "【Web Source】" followed by the source title and URL
+   - Example: 【網路資訊來源】標題: [title], 網址: [url]
 
-3. **Web Search Integration:** You will receive web search results related to the user's question. Use these results to:
+3. **Core Foundation:** Your answers must be rooted in the Old Testament and New Testament.
+
+4. **Scripture Citation:** When you mention biblical principles, *must* cite specific chapters and verses (book chapter:verse).
+
+5. **Web Search Integration:** Use the web search results to:
    - Find historical background and context
    - Discover original Greek/Hebrew word analysis
    - Learn about famous theologians' views
    - Get modern theological insights and scholarly research
    - Find relevant articles, studies, or resources
 
-4. **Synthesis:** Combine the web search results with biblical truth and your training knowledge to provide comprehensive, well-informed answers.
+6. **Synthesis:** Combine the web search results with biblical truth to provide comprehensive, well-informed answers.
 
-5. **Citation:** When using information from web search results, acknowledge the sources naturally in your response.
+7. **Tone:** Professional, insightful, and empathetic.
 
-6. **Tone:** Professional, insightful, and empathetic.
+8. **Language:** Respond in the same language as the user's question. If the user asks in English, respond in English. If the user asks in Chinese, respond in Traditional Chinese.
 
-7. **Language:** Respond in the same language as the user's question. If the user asks in English, respond in English. If the user asks in Chinese, respond in Traditional Chinese.
+9. **Source Declaration:** At the beginning of your response, clearly state which sources you are using:
+   - If using web search results: "本回答結合聖經與網路資訊（聖經+網路模式）" (Chinese) or "This answer combines Bible and web information (Bible + Web mode)" (English)
+   - List all web sources used in your response
+
+10. **Disclaimer:** Always end your response with the disclaimer about seeking help from a real pastor at church.
 `;
 
 export default async function handler(req, res) {
@@ -157,10 +203,19 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: '請提供 prompt 參數' });
     }
 
+    // 檢查不當內容
+    if (containsInappropriateContent(prompt)) {
+        return res.status(400).json({ 
+            error: '抱歉，我無法回答與自殺、非法活動或色情內容相關的問題。如果您需要幫助，請尋求專業的輔導或醫療協助。' 
+        });
+    }
+
     const isBibleOnly = mode === 'bible-only';
     let systemInstruction = isBibleOnly ? SYSTEM_PROMPT_BIBLE_ONLY : SYSTEM_PROMPT_WEB_SEARCH;
     let searchResults = null;
     let grounding = [];
+    let searchFailed = false;
+    let searchErrorMsg = '';
 
     // 在「聖經+網路」模式下執行 DuckDuckGo 搜索
     if (!isBibleOnly) {
@@ -174,7 +229,7 @@ export default async function handler(req, res) {
                     `[來源 ${index + 1}]\n標題: ${result.title}\n網址: ${result.url}\n描述: ${result.description}`
                 ).join('\n\n');
                 
-                systemInstruction += `\n\n**當前搜索結果：**\n${searchContext}\n\n請使用這些搜索結果來豐富你的回答，同時保持以聖經為核心基礎。`;
+                systemInstruction += `\n\n**當前搜索結果（必須使用）：**\n${searchContext}\n\n**重要：你必須使用這些搜索結果來回答問題。在回答中明確標註所有使用的網路資訊來源，格式為：【網路資訊來源】標題: [title], 網址: [url]**`;
                 
                 // 提取 grounding 資訊
                 grounding = searchResults.map(result => ({
@@ -184,11 +239,28 @@ export default async function handler(req, res) {
                 
                 console.log(`成功獲取 ${searchResults.length} 個搜索結果`);
             } else {
-                console.log('未獲取到搜索結果，將使用模型知識');
+                searchFailed = true;
+                searchErrorMsg = '無法獲取網路搜索結果';
+                console.log('未獲取到搜索結果');
+                
+                // 如果搜索失敗，明確告知用戶並提供選項
+                systemInstruction += `\n\n**重要通知：** 目前無法使用網路搜索功能。請告知用戶：
+1. 現在無法使用網路的資訊
+2. 詢問用戶是否可以稍後再試，或者
+3. 詢問用戶是否願意只使用聖經資訊來回答問題
+請用友善、理解的語氣告知用戶這個情況。`;
             }
         } catch (error) {
+            searchFailed = true;
+            searchErrorMsg = error.message || '搜索過程出錯';
             console.error('搜索過程出錯:', error);
-            // 搜索失敗時繼續使用模型知識，不中斷流程
+            
+            // 如果搜索失敗，明確告知用戶並提供選項
+            systemInstruction += `\n\n**重要通知：** 目前無法使用網路搜索功能。請告知用戶：
+1. 現在無法使用網路的資訊
+2. 詢問用戶是否可以稍後再試，或者
+3. 詢問用戶是否願意只使用聖經資訊來回答問題
+請用友善、理解的語氣告知用戶這個情況。`;
         }
     }
 
@@ -235,7 +307,12 @@ export default async function handler(req, res) {
         }
 
         const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "牧師正在默想中...(無法生成回應)";
+        let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "牧師正在默想中...(無法生成回應)";
+        
+        // 確保回答中包含 disclaimer（如果還沒有）
+        if (!text.includes('教會') && !text.includes('church') && !text.includes('牧師') && !text.includes('pastor')) {
+            text += DISCLAIMER;
+        }
         
         // 如果沒有從搜索中獲取 grounding，嘗試從 Gemini API 響應中獲取
         if (grounding.length === 0) {
@@ -244,7 +321,12 @@ export default async function handler(req, res) {
             ).filter(a => a.uri) || [];
         }
 
-        return res.status(200).json({ text, grounding });
+        return res.status(200).json({ 
+            text, 
+            grounding,
+            searchUsed: !isBibleOnly && searchResults && searchResults.length > 0,
+            searchFailed: !isBibleOnly && searchFailed
+        });
     } catch (error) {
         console.error('API 錯誤:', error);
         return res.status(500).json({ error: error.message || '伺服器錯誤' });
