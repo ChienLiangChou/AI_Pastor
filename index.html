@@ -61,17 +61,25 @@
                 max-height: 40px !important;
             }
             
-            /* 固定輸入區域高度 */
+            /* 固定輸入區域高度 - 減少 padding 以確保所有元素可見 */
             .input-container {
-                min-height: 80px !important;
-                max-height: 80px !important;
+                min-height: 70px !important;
+                max-height: 70px !important;
+                padding: 0.5rem !important;
             }
             
-            /* 計算聊天區域高度：100vh - header(44px) - mode toggle(40px) - input(80px) */
+            /* 計算聊天區域高度：100vh - header(44px) - mode toggle(40px) - input(70px) */
             .chat-area {
-                height: calc(100vh - 44px - 40px - 80px) !important;
-                height: calc(100dvh - 44px - 40px - 80px) !important;
+                height: calc(100vh - 44px - 40px - 70px) !important;
+                height: calc(100dvh - 44px - 40px - 70px) !important;
                 min-height: 0 !important;
+            }
+            
+            /* 確保 textarea 在輸入容器內正確顯示 */
+            .input-container textarea {
+                max-height: 3rem !important;
+                padding-top: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
             }
         }
         
@@ -495,7 +503,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
                     </div>
 
                     {/* Input Area - 固定在底部，支援多行輸入（3行） */}
-                    <div className="input-container p-1.5 sm:p-2.5 md:p-4 bg-white border-t border-stone-200 shrink-0 safe-area-inset-bottom" style={{ minHeight: '80px', maxHeight: '80px' }}>
+                    <div className="input-container bg-white border-t border-stone-200 shrink-0 safe-area-inset-bottom" style={{ minHeight: '70px', maxHeight: '70px', padding: '0.5rem' }}>
                         <form onSubmit={handleSend} className="relative flex items-end gap-1.5 sm:gap-2">
                             <div className="flex-1 relative">
                                 <textarea
@@ -513,8 +521,8 @@ Your task is to answer the user's questions, combining biblical truth with broad
                                     className="w-full py-1.5 sm:py-2 md:py-3 pl-3 sm:pl-4 md:pl-5 pr-9 sm:pr-11 md:pr-14 rounded-2xl bg-stone-100 border border-stone-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-100 outline-none transition-all text-sm sm:text-base resize-none overflow-y-auto font-serif"
                                     disabled={isLoading}
                                     style={{ 
-                                        minHeight: '3rem', 
-                                        maxHeight: '3.5rem',
+                                        minHeight: '2.5rem', 
+                                        maxHeight: '3rem',
                                         lineHeight: '1.4',
                                         fontSize: '14px'
                                     }}
