@@ -36,7 +36,7 @@ git push -u origin main
 5. Railway 會自動偵測並部署
 6. 在 Settings → Variables 中新增環境變數：
    ```
-   GOOGLE_API_KEY=AIzaSyD993-kCu7liPeaA0F754aPbuS1eXnKJVQ
+   GOOGLE_API_KEY=您的_GOOGLE_API_KEY（請從 Google AI Studio 獲取新的 API Key）
    ```
 7. Railway 會自動重新部署
 8. 在 Settings → Domains 中可以看到後端 URL（例如：`https://ai-pastor-production.up.railway.app`）

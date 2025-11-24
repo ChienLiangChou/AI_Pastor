@@ -20,7 +20,7 @@
 3. 點擊 "New Project" → "Deploy from GitHub repo"
 4. 選擇您的專案（或先推送到 GitHub）
 5. 在 Settings → Variables 中新增：
-   - `GOOGLE_API_KEY` = `AIzaSyD993-kCu7liPeaA0F754aPbuS1eXnKJVQ`
+   - `GOOGLE_API_KEY` = `您的_GOOGLE_API_KEY`（請從 Google AI Studio 獲取新的 API Key）
 6. Railway 會自動部署並提供 URL（例如：`https://ai-pastor-backend.railway.app`）
 
 ### 步驟 2：更新前端配置

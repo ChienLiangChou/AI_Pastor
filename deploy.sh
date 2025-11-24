@@ -104,7 +104,7 @@ case $choice in
         echo "3. 點擊 'New Project' → 'Deploy from GitHub repo'"
         echo "4. 選擇 '$repo_name' 倉庫"
         echo "5. 在 Settings → Variables 中新增："
-        echo "   - GOOGLE_API_KEY = AIzaSyD993-kCu7liPeaA0F754aPbuS1eXnKJVQ"
+        echo "   - GOOGLE_API_KEY = 您的_GOOGLE_API_KEY（請從 Google AI Studio 獲取新的 API Key）"
         echo "6. Railway 會自動部署並提供 URL"
         echo ""
         read -p "請輸入 Railway 後端 URL (例如: https://ai-pastor.railway.app): " backend_url

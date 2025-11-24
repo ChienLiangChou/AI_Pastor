@@ -134,7 +134,7 @@ async function main() {
     console.log('   - 前往 https://railway.app/');
     console.log('   - 用 GitHub 登入');
     console.log('   - 建立新專案並連接 GitHub 倉庫');
-    console.log('   - 在環境變數中設定: GOOGLE_API_KEY=AIzaSyD993-kCu7liPeaA0F754aPbuS1eXnKJVQ');
+    console.log('   - 在環境變數中設定: GOOGLE_API_KEY=您的_GOOGLE_API_KEY（請從 Google AI Studio 獲取新的 API Key）');
     console.log('   - Railway 會提供後端 URL\n');
     
     console.log('2. 獲得後端 URL 後，執行：');

@@ -57,7 +57,7 @@ git push -u origin main
    - 點擊 "Variables" 標籤
    - 新增環境變數：
      - **Key**: `GOOGLE_API_KEY`
-     - **Value**: `AIzaSyD993-kCu7liPeaA0F754aPbuS1eXnKJVQ`
+     - **Value**: `您的_GOOGLE_API_KEY`（請從 Google AI Studio 獲取新的 API Key）
    - 點擊 "Add"
 
 4. **獲得後端 URL**
