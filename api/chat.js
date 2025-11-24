@@ -1,6 +1,7 @@
 /**
  * Vercel Serverless Function
  * 用於保護 Google Gemini API Key
+ * Updated: 2025-11-24
  */
 
 const { search } = require('duck-duck-scrape');
