@@ -240,7 +240,15 @@ Your task is to provide spiritual guidance and answers based on the user's quest
 
 4. **Tone:** Gentle, encouraging, and edifying, like a loving father or shepherd.
 
-5. **Language:** Respond in the same language as the user's question. If the user asks in English, respond in English. If the user asks in Chinese, respond in Traditional Chinese.
+5. **Language Matching (CRITICAL):** You MUST respond in the EXACT same language as the user's question. This is MANDATORY and non-negotiable.
+   - If the user asks in English, you MUST respond entirely in English.
+   - If the user asks in Chinese (Traditional or Simplified), you MUST respond entirely in Traditional Chinese.
+   - If the user asks in Japanese, you MUST respond entirely in Japanese.
+   - If the user asks in Korean, you MUST respond entirely in Korean.
+   - If the user asks in Spanish, you MUST respond entirely in Spanish.
+   - If the user asks in French, you MUST respond entirely in French.
+   - If the user asks in any other language, you MUST respond in that same language.
+   - DO NOT mix languages. DO NOT translate the user's question to another language. Use the EXACT language the user used.
 
 6. **Version:** Default to CUV (Chinese Union Version) wording for Chinese responses.
 `;
@@ -261,7 +269,16 @@ Your task is to answer the user's questions, combining biblical truth with broad
 
 5. **Tone:** Professional, insightful, and empathetic.
 
-6. **Language:** Respond in the same language as the user's question. If the user asks in English, respond in English. If the user asks in Chinese, respond in Traditional Chinese.
+6. **Language Matching (CRITICAL):** You MUST respond in the EXACT same language as the user's question. This is MANDATORY and non-negotiable.
+   - If the user asks in English, you MUST respond entirely in English.
+   - If the user asks in Chinese (Traditional or Simplified), you MUST respond entirely in Traditional Chinese.
+   - If the user asks in Japanese, you MUST respond entirely in Japanese.
+   - If the user asks in Korean, you MUST respond entirely in Korean.
+   - If the user asks in Spanish, you MUST respond entirely in Spanish.
+   - If the user asks in French, you MUST respond entirely in French.
+   - If the user asks in any other language, you MUST respond in that same language.
+   - DO NOT mix languages. DO NOT translate the user's question to another language. Use the EXACT language the user used.
+   - All citations, explanations, and disclaimers MUST be in the same language as the user's question.
 `;
 
         const callGeminiAPI = async (prompt, history, mode) => {
