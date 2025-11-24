@@ -108,6 +108,88 @@ async function searchDuckDuckGo(query, maxRetries = 1) {
     return null;
 }
 
+// SerpAPI 搜索函數（備援方案）
+async function searchSerpAPI(query) {
+    const apiKey = process.env.SERPAPI_API_KEY;
+    
+    if (!apiKey) {
+        console.warn('SerpAPI API Key 未設定，無法使用 SerpAPI 搜索');
+        return null;
+    }
+
+    try {
+        console.log('使用 SerpAPI 進行搜索:', query);
+        
+        // 構建 SerpAPI 請求 URL
+        const params = new URLSearchParams({
+            q: query,
+            api_key: apiKey,
+            engine: 'google',
+            num: 5, // 獲取 5 個結果
+            safe: 'active' // 安全搜索
+        });
+
+        const response = await fetch(`https://serpapi.com/search.json?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`SerpAPI 請求失敗: ${response.status} - ${errorText}`);
+            return null;
+        }
+
+        const data = await response.json();
+        
+        // 格式化搜索結果
+        if (data && data.organic_results && Array.isArray(data.organic_results) && data.organic_results.length > 0) {
+            const formattedResults = data.organic_results.slice(0, 5).map(result => ({
+                title: result.title || '',
+                url: result.link || '',
+                description: result.snippet || ''
+            })).filter(r => r.title && r.url); // 過濾掉無效結果
+            
+            if (formattedResults.length > 0) {
+                console.log(`SerpAPI 成功獲取 ${formattedResults.length} 個搜索結果`);
+                return formattedResults;
+            }
+        }
+        
+        console.log('SerpAPI 未獲取到搜索結果');
+        return null;
+    } catch (error) {
+        console.error('SerpAPI 搜索錯誤:', error.message || error.toString());
+        return null;
+    }
+}
+
+// 統一的搜索函數（帶 fallback）
+async function performWebSearch(query) {
+    // 先嘗試 DuckDuckGo
+    console.log('嘗試使用 DuckDuckGo 搜索...');
+    let results = await searchDuckDuckGo(query);
+    
+    if (results && results.length > 0) {
+        console.log('DuckDuckGo 搜索成功');
+        return { results, source: 'duckduckgo' };
+    }
+    
+    // 如果 DuckDuckGo 失敗，使用 SerpAPI 作為備援
+    console.log('DuckDuckGo 搜索失敗，切換到 SerpAPI...');
+    results = await searchSerpAPI(query);
+    
+    if (results && results.length > 0) {
+        console.log('SerpAPI 搜索成功');
+        return { results, source: 'serpapi' };
+    }
+    
+    console.log('所有搜索方法都失敗了');
+    return { results: null, source: null };
+}
+
 // 檢查問題是否包含不當內容
 function containsInappropriateContent(text) {
     const inappropriateKeywords = [
@@ -228,11 +310,12 @@ export default async function handler(req, res) {
     let searchFailed = false;
     let searchErrorMsg = '';
 
-    // 在「聖經+網路」模式下執行 DuckDuckGo 搜索
+    // 在「聖經+網路」模式下執行網路搜索（帶 fallback）
     if (!isBibleOnly) {
         try {
-            console.log('執行 DuckDuckGo 搜索:', prompt);
-            searchResults = await searchDuckDuckGo(prompt);
+            console.log('執行網路搜索:', prompt);
+            const searchResponse = await performWebSearch(prompt);
+            searchResults = searchResponse.results;
             
             if (searchResults && searchResults.length > 0) {
                 // 將搜索結果格式化為文本，添加到系統提示中
@@ -240,7 +323,11 @@ export default async function handler(req, res) {
                     `[來源 ${index + 1}]\n標題: ${result.title}\n網址: ${result.url}\n描述: ${result.description}`
                 ).join('\n\n');
                 
-                systemInstruction += `\n\n**當前搜索結果（必須使用）：**\n${searchContext}\n\n**重要：你必須使用這些搜索結果來回答問題。在回答中明確標註所有使用的網路資訊來源，格式為：【網路資訊來源】標題: [title], 網址: [url]**`;
+                const sourceInfo = searchResponse.source === 'serpapi' 
+                    ? '（使用 SerpAPI 搜索）' 
+                    : '（使用 DuckDuckGo 搜索）';
+                
+                systemInstruction += `\n\n**當前搜索結果（必須使用）${sourceInfo}：**\n${searchContext}\n\n**重要：你必須使用這些搜索結果來回答問題。在回答中明確標註所有使用的網路資訊來源，格式為：【網路資訊來源】標題: [title], 網址: [url]**`;
                 
                 // 提取 grounding 資訊
                 grounding = searchResults.map(result => ({
@@ -248,11 +335,11 @@ export default async function handler(req, res) {
                     title: result.title
                 }));
                 
-                console.log(`成功獲取 ${searchResults.length} 個搜索結果`);
+                console.log(`成功獲取 ${searchResults.length} 個搜索結果（來源: ${searchResponse.source}）`);
             } else {
                 searchFailed = true;
-                searchErrorMsg = '無法獲取網路搜索結果';
-                console.log('未獲取到搜索結果');
+                searchErrorMsg = '無法獲取網路搜索結果（DuckDuckGo 和 SerpAPI 都失敗）';
+                console.log('所有搜索方法都失敗了');
                 
                 // 如果搜索失敗，明確告知用戶並提供選項
                 systemInstruction += `\n\n**重要通知：** 目前無法使用網路搜索功能。請告知用戶：
