@@ -362,7 +362,9 @@ Your task is to answer the user's questions, combining biblical truth with broad
             }, [messages]);
 
             const handleSend = async (e) => {
-                e.preventDefault();
+                if (e && e.preventDefault) {
+                    e.preventDefault();
+                }
                 if (!input.trim() || isLoading) return;
 
                 const userMessage = input.trim();
@@ -398,20 +400,20 @@ Your task is to answer the user's questions, combining biblical truth with broad
             return (
                 <div className="flex flex-col h-screen w-full max-w-4xl mx-auto shadow-2xl bg-[#faf9f6] overflow-hidden">
                     {/* Header - 更緊湊的設計 */}
-                    <header className="bg-slate-900 text-amber-50 px-3 sm:px-4 py-1.5 sm:py-2.5 shadow-md flex items-center justify-between z-10 shrink-0">
-                        <div className="flex items-center gap-2 sm:gap-3">
+                    <header className="bg-slate-900 text-amber-50 px-2 sm:px-4 py-1 sm:py-2 shadow-md flex items-center justify-between z-10 shrink-0">
+                        <div className="flex items-center gap-1.5 sm:gap-3">
                             <div className="bg-amber-600 p-1 sm:p-1.5 rounded-lg">
-                                <Icon name="cross" size={18} className="sm:w-5 sm:h-5 text-white" />
+                                <Icon name="cross" size={16} className="sm:w-5 sm:h-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-sm sm:text-lg md:text-xl font-bold tracking-wide font-serif">AI 牧師</h1>
+                                <h1 className="text-xs sm:text-lg md:text-xl font-bold tracking-wide font-serif">AI 牧師</h1>
                                 <p className="text-xs text-amber-200/80 hidden sm:block">你的隨身靈修導師</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <button
                                 onClick={clearHistory}
-                                className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-colors px-1.5 sm:px-2 py-1 sm:py-1.5 rounded hover:bg-amber-800/30 active:bg-amber-800/50"
+                                className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-colors px-1 sm:px-2 py-1 rounded hover:bg-amber-800/30 active:bg-amber-800/50"
                                 title="清除對話記錄"
                             >
                                 <Icon name="trash-2" size={12} className="sm:w-3.5 sm:h-3.5 inline mr-0.5 sm:mr-1" />
@@ -422,31 +424,31 @@ Your task is to answer the user's questions, combining biblical truth with broad
                     </header>
 
                     {/* Mode Toggle - 更緊湊的設計 */}
-                    <div className="bg-stone-100 p-1.5 sm:p-2 border-b border-stone-200 flex justify-center shrink-0">
+                    <div className="bg-stone-100 p-1 sm:p-2 border-b border-stone-200 flex justify-center shrink-0">
                          <div className="flex bg-stone-200 p-0.5 sm:p-1 rounded-lg w-full max-w-md">
                             <button
                                 onClick={() => setMode('bible-only')}
-                                className={`flex-1 flex items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all active:scale-95 ${
+                                className={`flex-1 flex items-center justify-center px-1.5 sm:px-4 py-1 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all active:scale-95 ${
                                     mode === 'bible-only' ? 'bg-white text-amber-800 shadow-sm' : 'text-stone-500'
                                 }`}
                             >
-                                <Icon name="book-open" size={12} className="sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-                                <span className="whitespace-nowrap">唯獨聖經</span>
+                                <Icon name="book-open" size={11} className="sm:w-4 sm:h-4 mr-0.5 sm:mr-2" /> 
+                                <span className="whitespace-nowrap text-xs sm:text-sm">唯獨聖經</span>
                             </button>
                             <button
                                 onClick={() => setMode('bible-plus')}
-                                className={`flex-1 flex items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all active:scale-95 ${
+                                className={`flex-1 flex items-center justify-center px-1.5 sm:px-4 py-1 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all active:scale-95 ${
                                     mode === 'bible-plus' ? 'bg-white text-blue-700 shadow-sm' : 'text-stone-500'
                                 }`}
                             >
-                                <Icon name="globe" size={12} className="sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-                                <span className="whitespace-nowrap">聖經+網路</span>
+                                <Icon name="globe" size={11} className="sm:w-4 sm:h-4 mr-0.5 sm:mr-2" /> 
+                                <span className="whitespace-nowrap text-xs sm:text-sm">聖經+網路</span>
                             </button>
                         </div>
                     </div>
 
                     {/* Chat Area - 使用 flex-1 確保佔用剩餘空間 */}
-                    <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-2 sm:py-4 scrollbar-thin min-h-0">
+                    <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-4 scrollbar-thin min-h-0">
                         {messages.map((msg, index) => (
                             <MessageBubble key={index} role={msg.role} content={msg.content} grounding={msg.grounding} />
                         ))}
@@ -465,21 +467,31 @@ Your task is to answer the user's questions, combining biblical truth with broad
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Input Area - 固定在底部 */}
+                    {/* Input Area - 固定在底部，支援多行輸入 */}
                     <div className="p-2 sm:p-3 md:p-4 bg-white border-t border-stone-200 shrink-0 safe-area-inset-bottom">
-                        <form onSubmit={handleSend} className="relative flex items-center gap-1.5 sm:gap-2">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="請輸入您的問題..."
-                                className="flex-1 py-2 sm:py-2.5 md:py-3 pl-3 sm:pl-4 md:pl-5 pr-8 sm:pr-10 md:pr-12 rounded-full bg-stone-100 border border-stone-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-100 outline-none transition-all text-sm sm:text-base"
-                                disabled={isLoading}
-                            />
+                        <form onSubmit={handleSend} className="relative flex items-end gap-1.5 sm:gap-2">
+                            <div className="flex-1 relative">
+                                <textarea
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        // 按 Enter 發送（Shift+Enter 換行）
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSend(e);
+                                        }
+                                    }}
+                                    placeholder="請輸入您的問題..."
+                                    rows={3}
+                                    className="w-full py-2 sm:py-2.5 md:py-3 pl-3 sm:pl-4 md:pl-5 pr-10 sm:pr-12 md:pr-14 rounded-2xl bg-stone-100 border border-stone-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-100 outline-none transition-all text-sm sm:text-base resize-none overflow-y-auto max-h-32 sm:max-h-40 font-serif"
+                                    disabled={isLoading}
+                                    style={{ minHeight: '3.5rem' }}
+                                />
+                            </div>
                             <button
                                 type="submit"
                                 disabled={!input.trim() || isLoading}
-                                className={`p-2 sm:p-2.5 md:p-3 rounded-full shadow-md transition-all active:scale-95 shrink-0 ${
+                                className={`p-2 sm:p-2.5 md:p-3 rounded-full shadow-md transition-all active:scale-95 shrink-0 mb-0.5 sm:mb-1 ${
                                     !input.trim() || isLoading
                                     ? 'bg-stone-200 text-stone-400'
                                     : 'bg-amber-700 hover:bg-amber-800 active:bg-amber-900 text-white'
