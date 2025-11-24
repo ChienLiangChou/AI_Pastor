@@ -6,9 +6,9 @@
 
 const { search } = require('duck-duck-scrape');
 
-// 速率限制：每分鐘最多 3 次搜索請求（保守的限制，避免被封鎖）
+// 速率限制：每分鐘最多 1 次搜索請求（非常保守的限制，避免被封鎖）
 const RATE_LIMIT = {
-    maxRequests: 3,
+    maxRequests: 1,
     windowMs: 60 * 1000, // 1 分鐘
     requests: []
 };
@@ -31,15 +31,25 @@ function checkRateLimit() {
     return true;
 }
 
+// 生成隨機延遲（模擬人類行為）
+function getRandomDelay(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 // DuckDuckGo 搜索函數（帶錯誤處理和重試）
-async function searchDuckDuckGo(query, maxRetries = 2) {
+async function searchDuckDuckGo(query, maxRetries = 1) {
     if (!checkRateLimit()) {
         console.warn('速率限制：搜索請求過於頻繁，跳過本次搜索');
         return null;
     }
 
-    // 在搜索前等待更長時間，避免請求過快
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // 在搜索前等待更長時間，並添加隨機延遲模擬人類行為
+    // 基礎延遲 5-8 秒，加上隨機 2-5 秒
+    const baseDelay = getRandomDelay(5000, 8000);
+    const randomDelay = getRandomDelay(2000, 5000);
+    const totalDelay = baseDelay + randomDelay;
+    console.log(`等待 ${totalDelay}ms 後執行搜索（模擬人類行為）...`);
+    await new Promise(resolve => setTimeout(resolve, totalDelay));
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
@@ -57,40 +67,40 @@ async function searchDuckDuckGo(query, maxRetries = 2) {
                 })).filter(r => r.title && r.url); // 過濾掉無效結果
                 
                 if (formattedResults.length > 0) {
+                    console.log(`成功獲取 ${formattedResults.length} 個搜索結果`);
                     return formattedResults;
                 }
             }
             
             // 如果沒有結果，嘗試重試
             if (attempt < maxRetries) {
-                console.log(`未獲取到結果，等待後重試 (嘗試 ${attempt + 1}/${maxRetries})...`);
-                await new Promise(resolve => setTimeout(resolve, 4000 * (attempt + 1)));
+                const retryDelay = getRandomDelay(10000, 15000);
+                console.log(`未獲取到結果，等待 ${retryDelay}ms 後重試 (嘗試 ${attempt + 1}/${maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
                 continue;
             }
             
+            console.log('未獲取到搜索結果');
             return null;
         } catch (error) {
             const errorMsg = error.message || error.toString();
             console.error(`DuckDuckGo 搜索錯誤 (嘗試 ${attempt + 1}/${maxRetries + 1}):`, errorMsg);
             
-            // 如果是速率限制錯誤，等待更長時間後再重試一次
+            // 如果是速率限制錯誤，直接返回 null，不重試（避免進一步觸發限制）
             if (errorMsg.includes('anomaly') || errorMsg.includes('too quickly') || errorMsg.includes('rate limit')) {
-                if (attempt < maxRetries) {
-                    console.warn('檢測到速率限制，等待更長時間後重試...');
-                    await new Promise(resolve => setTimeout(resolve, 5000 * (attempt + 1)));
-                    continue;
-                } else {
-                    console.warn('速率限制，無法完成搜索');
-                    return null;
-                }
+                console.warn('檢測到速率限制，停止搜索以避免進一步觸發限制');
+                return null;
             }
             
             if (attempt < maxRetries) {
-                // 等待後重試（指數退避，更長的延遲）
-                const delay = 4000 * (attempt + 1);
-                console.log(`等待 ${delay}ms 後重試...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
+                // 等待後重試（指數退避，更長的延遲，加上隨機延遲）
+                const baseRetryDelay = 10000 * (attempt + 1);
+                const randomRetryDelay = getRandomDelay(5000, 10000);
+                const totalRetryDelay = baseRetryDelay + randomRetryDelay;
+                console.log(`等待 ${totalRetryDelay}ms 後重試...`);
+                await new Promise(resolve => setTimeout(resolve, totalRetryDelay));
             } else {
+                console.log('搜索失敗，已達最大重試次數');
                 return null;
             }
         }
