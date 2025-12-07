@@ -488,7 +488,7 @@
                     ref={canvasRef}
                     className="absolute top-0 left-0 w-full h-full pointer-events-none"
                     style={{
-                        zIndex: 0,
+                        zIndex: 1,
                         opacity: 0.6, // 進一步降低整體透明度
                         width: '100%',
                         height: '100%'
@@ -715,7 +715,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
             };
 
             return (
-                <div className={`flex w-full mb-6 message-enter ${isUser ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex w-full mb-6 message-enter relative z-30 ${isUser ? 'justify-end' : 'justify-start'}`} style={{ position: 'relative', zIndex: 30 }}>
                     {!isUser && (
                         <div className="flex-shrink-0 mr-2 sm:mr-3 mt-1">
                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-amber-400 shadow-lg border-2 border-amber-500/50 ring-2 ring-amber-500/20">
@@ -728,7 +728,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
                         isUser 
                         ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-white rounded-br-md shadow-lg shadow-amber-900/30' 
                         : 'bg-white text-slate-800 border border-stone-200/80 rounded-bl-md shadow-lg shadow-stone-200/50 backdrop-blur-sm'
-                    }`}>
+                    }`} style={{ position: 'relative', zIndex: 30 }}>
                         <div className={`text-xs sm:text-sm md:text-base leading-relaxed font-serif ${!isUser ? 'text-justify' : ''}`}>
                             {formatText(content)}
                         </div>
@@ -898,7 +898,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
                         <ParticleBackground containerRef={chatAreaRef} />
                         
                         {/* 訊息內容（在粒子之上） */}
-                        <div className="relative z-10">
+                        <div className="relative z-20" style={{ position: 'relative', zIndex: 20 }}>
                             {messages.map((msg, index) => (
                                 <MessageBubble key={index} role={msg.role} content={msg.content} grounding={msg.grounding} />
                             ))}
