@@ -486,12 +486,17 @@
             return (
                 <canvas
                     ref={canvasRef}
-                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    className="absolute top-0 left-0 pointer-events-none"
                     style={{
-                        zIndex: 1,
-                        opacity: 0.6, // 進一步降低整體透明度
+                        zIndex: 0,
+                        opacity: 0.4, // 降低透明度，確保不干擾內容
                         width: '100%',
-                        height: '100%'
+                        height: '100%',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0
                     }}
                 />
             );
@@ -715,9 +720,9 @@ Your task is to answer the user's questions, combining biblical truth with broad
             };
 
             return (
-                <div className={`flex w-full mb-6 message-enter relative z-30 ${isUser ? 'justify-end' : 'justify-start'}`} style={{ position: 'relative', zIndex: 30 }}>
+                <div className={`flex w-full mb-6 message-enter ${isUser ? 'justify-end' : 'justify-start'}`} style={{ position: 'relative', zIndex: 10 }}>
                     {!isUser && (
-                        <div className="flex-shrink-0 mr-2 sm:mr-3 mt-1">
+                        <div className="flex-shrink-0 mr-2 sm:mr-3 mt-1" style={{ position: 'relative', zIndex: 10 }}>
                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-amber-400 shadow-lg border-2 border-amber-500/50 ring-2 ring-amber-500/20">
                                 <Icon name="cross" size={16} className="sm:w-5 sm:h-5" />
                             </div>
@@ -728,7 +733,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
                         isUser 
                         ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-white rounded-br-md shadow-lg shadow-amber-900/30' 
                         : 'bg-white text-slate-800 border border-stone-200/80 rounded-bl-md shadow-lg shadow-stone-200/50 backdrop-blur-sm'
-                    }`} style={{ position: 'relative', zIndex: 30 }}>
+                    }`} style={{ position: 'relative', zIndex: 10 }}>
                         <div className={`text-xs sm:text-sm md:text-base leading-relaxed font-serif ${!isUser ? 'text-justify' : ''}`}>
                             {formatText(content)}
                         </div>
@@ -893,12 +898,14 @@ Your task is to answer the user's questions, combining biblical truth with broad
                     </div>
 
                     {/* Chat Area - 使用 flex-1 確保佔用剩餘空間，不擠壓固定元素 */}
-                    <div ref={chatAreaRef} className="chat-area flex-1 overflow-y-auto px-2 sm:px-4 py-1 sm:py-2 md:py-4 scrollbar-thin min-h-0 relative">
-                        {/* 粒子背景 */}
-                        <ParticleBackground containerRef={chatAreaRef} />
+                    <div ref={chatAreaRef} className="chat-area flex-1 overflow-y-auto px-2 sm:px-4 py-1 sm:py-2 md:py-4 scrollbar-thin min-h-0 relative" style={{ position: 'relative' }}>
+                        {/* 粒子背景 - 絕對定位在背景層 */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, pointerEvents: 'none' }}>
+                            <ParticleBackground containerRef={chatAreaRef} />
+                        </div>
                         
-                        {/* 訊息內容（在粒子之上） */}
-                        <div className="relative z-20" style={{ position: 'relative', zIndex: 20 }}>
+                        {/* 訊息內容（在粒子之上） - 確保有背景和正確的 z-index */}
+                        <div style={{ position: 'relative', zIndex: 10, minHeight: '100%' }}>
                             {messages.map((msg, index) => (
                                 <MessageBubble key={index} role={msg.role} content={msg.content} grounding={msg.grounding} />
                             ))}
