@@ -175,3 +175,6 @@ AI Pastor is a tool and cannot replace real relationships and professional spiri
 - 根據平台特性選擇合適版本
 - 可以根據需要調整語氣和長度
 
+
+
+
