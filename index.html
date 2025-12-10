@@ -636,294 +636,270 @@
                         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));
                         rendererRef.current = renderer;
                         
-                        // ========== 創建立體星空宇宙 ==========
-                        console.log('✨ 創建立體星空...');
+                        // ========== 創建深色背景星空 ==========
+                        console.log('✨ 創建背景星空...');
                         
-                        // 多層星空粒子系統（不同深度，創造立體感）
-                        const starLayers = [
-                            { count: isMobile ? 300 : 600, depth: -15, size: 0.08, speed: 0.1 }, // 遠景
-                            { count: isMobile ? 200 : 400, depth: -8, size: 0.12, speed: 0.15 },  // 中景
-                            { count: isMobile ? 100 : 200, depth: -3, size: 0.18, speed: 0.2 }   // 近景
-                        ];
+                        // 細小的背景星星粒子（深空感）
+                        const backgroundStarCount = isMobile ? 500 : 1000;
+                        const bgPositions = new Float32Array(backgroundStarCount * 3);
+                        const bgColors = new Float32Array(backgroundStarCount * 3);
                         
-                        const starSystems = [];
-                        const starIntensities = []; // 用於閃爍效果
-                        
-                        starLayers.forEach((layer, layerIndex) => {
-                            const positions = new Float32Array(layer.count * 3);
-                            const colors = new Float32Array(layer.count * 3);
-                            const sizes = new Float32Array(layer.count);
-                            
-                            for (let i = 0; i < layer.count; i++) {
-                                const i3 = i * 3;
-                                // 隨機分佈在整個空間
-                                positions[i3] = (Math.random() - 0.5) * 30;
-                                positions[i3 + 1] = (Math.random() - 0.5) * 30;
-                                positions[i3 + 2] = layer.depth + (Math.random() - 0.5) * 2;
-                                
-                                // 星星顏色：白色、金色、藍白色（聖誕節+宇宙感）
-                                const colorType = Math.random();
-                                if (colorType < 0.4) {
-                                    // 白色星星
-                                    colors[i3] = 1;
-                                    colors[i3 + 1] = 1;
-                                    colors[i3 + 2] = 1;
-                                } else if (colorType < 0.7) {
-                                    // 金色星星（聖誕節）
-                                    colors[i3] = 1;
-                                    colors[i3 + 1] = 0.84;
-                                    colors[i3 + 2] = 0;
-                                } else {
-                                    // 藍白色星星（宇宙感）
-                                    colors[i3] = 0.8;
-                                    colors[i3 + 1] = 0.9;
-                                    colors[i3 + 2] = 1;
-                                }
-                                
-                                sizes[i] = layer.size * (0.8 + Math.random() * 0.4);
-                                starIntensities.push({
-                                    base: 0.5 + Math.random() * 0.5,
-                                    phase: Math.random() * Math.PI * 2,
-                                    speed: 0.5 + Math.random() * 1.5
-                                });
-                            }
-                            
-                            const geometry = new THREE.BufferGeometry();
-                            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-                            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-                            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-                            
-                            const material = new THREE.PointsMaterial({
-                                size: layer.size,
-                                vertexColors: true,
-                                transparent: true,
-                                opacity: 0.9,
-                                sizeAttenuation: true,
-                                blending: THREE.AdditiveBlending // 發光效果
-                            });
-                            
-                            const stars = new THREE.Points(geometry, material);
-                            stars.userData = { layerIndex, speed: layer.speed };
-                            scene.add(stars);
-                            starSystems.push({ stars, geometry, material, layerIndex });
-                        });
-                        
-                        // 創建大型閃爍星星（主要亮點）
-                        const createGlowingStar = (x, y, z, color, size = 0.3) => {
-                            const starGeo = new THREE.OctahedronGeometry(size, 0);
-                            const starMat = new THREE.MeshStandardMaterial({
-                                color: color,
-                                emissive: color,
-                                emissiveIntensity: 1.5,
-                                metalness: 0.1,
-                                roughness: 0.1
-                            });
-                            const star = new THREE.Mesh(starGeo, starMat);
-                            star.position.set(x, y, z);
-                            
-                            // 添加發光光暈（使用更大的透明球體）
-                            const glowGeo = new THREE.SphereGeometry(size * 2, 16, 16);
-                            const glowMat = new THREE.MeshBasicMaterial({
-                                color: color,
-                                transparent: true,
-                                opacity: 0.3,
-                                side: THREE.BackSide
-                            });
-                            const glow = new THREE.Mesh(glowGeo, glowMat);
-                            star.add(glow);
-                            
-                            return star;
-                        };
-                        
-                        // 添加大型閃爍星星（聖誕節+宇宙主題）
-                        const glowingStars = [
-                            createGlowingStar(-5, 3, -5, 0xFFD700, 0.4), // 金色大星
-                            createGlowingStar(5, 2.5, -6, 0x87CEEB, 0.35), // 藍色大星
-                            createGlowingStar(0, 4, -4, 0xFFFFFF, 0.3), // 白色大星
-                            createGlowingStar(-3, 1, -3, 0xFFD700, 0.25), // 金色小星
-                            createGlowingStar(3, 1.5, -5, 0xFF69B4, 0.25), // 粉紅色星（聖誕節）
-                            createGlowingStar(-2, -1, -4, 0x00FF00, 0.2), // 綠色星（聖誕節）
-                            createGlowingStar(2, -1.5, -3, 0xFF0000, 0.2) // 紅色星（聖誕節）
-                        ];
-                        glowingStars.forEach(star => scene.add(star));
-                        
-                        // 聖誕節雪花（融入宇宙）
-                        const snowflakeCount = isMobile ? 150 : 300;
-                        const snowPositions = new Float32Array(snowflakeCount * 3);
-                        const snowColors = new Float32Array(snowflakeCount * 3);
-                        const snowVelocities = new Float32Array(snowflakeCount * 3);
-                        
-                        for (let i = 0; i < snowflakeCount; i++) {
+                        for (let i = 0; i < backgroundStarCount; i++) {
                             const i3 = i * 3;
-                            snowPositions[i3] = (Math.random() - 0.5) * 25;
-                            snowPositions[i3 + 1] = Math.random() * 25;
-                            snowPositions[i3 + 2] = (Math.random() - 0.5) * 15;
+                            bgPositions[i3] = (Math.random() - 0.5) * 40;
+                            bgPositions[i3 + 1] = (Math.random() - 0.5) * 40;
+                            bgPositions[i3 + 2] = (Math.random() - 0.5) * 20 - 10;
                             
-                            // 白色雪花，帶一點藍色調（宇宙感）
-                            snowColors[i3] = 0.9 + Math.random() * 0.1;
-                            snowColors[i3 + 1] = 0.9 + Math.random() * 0.1;
-                            snowColors[i3 + 2] = 1;
-                            
-                            snowVelocities[i3] = (Math.random() - 0.5) * 0.015;
-                            snowVelocities[i3 + 1] = -0.008 - Math.random() * 0.015;
-                            snowVelocities[i3 + 2] = (Math.random() - 0.5) * 0.008;
+                            // 非常淡的白色星星
+                            const brightness = 0.3 + Math.random() * 0.3;
+                            bgColors[i3] = brightness;
+                            bgColors[i3 + 1] = brightness;
+                            bgColors[i3 + 2] = brightness;
                         }
                         
-                        const snowGeometry = new THREE.BufferGeometry();
-                        snowGeometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
-                        snowGeometry.setAttribute('color', new THREE.BufferAttribute(snowColors, 3));
+                        const bgStarGeometry = new THREE.BufferGeometry();
+                        bgStarGeometry.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
+                        bgStarGeometry.setAttribute('color', new THREE.BufferAttribute(bgColors, 3));
                         
-                        const snowMaterial = new THREE.PointsMaterial({
-                            size: isMobile ? 0.12 : 0.15,
+                        const bgStarMaterial = new THREE.PointsMaterial({
+                            size: 0.05,
                             vertexColors: true,
                             transparent: true,
-                            opacity: 0.8,
-                            sizeAttenuation: true,
-                            blending: THREE.AdditiveBlending
+                            opacity: 0.6,
+                            sizeAttenuation: true
                         });
                         
-                        const snowflakes = new THREE.Points(snowGeometry, snowMaterial);
-                        scene.add(snowflakes);
-                    
-                        // 創建發光聖誕樹（融入宇宙主題）
-                        const createGlowingChristmasTree = (x, y, z, scale = 1) => {
-                            const group = new THREE.Group();
+                        const backgroundStars = new THREE.Points(bgStarGeometry, bgStarMaterial);
+                        scene.add(backgroundStars);
+                        
+                        // ========== 創建粒子聖誕樹（圓錐形）==========
+                        console.log('🎄 創建粒子聖誕樹...');
+                        
+                        // 創建圓錐形粒子分佈
+                        const treeParticleCount = isMobile ? 800 : 1500;
+                        const treePositions = new Float32Array(treeParticleCount * 3);
+                        const treeColors = new Float32Array(treeParticleCount * 3);
+                        const treeSizes = new Float32Array(treeParticleCount);
+                        const treeIntensities = [];
+                        
+                        for (let i = 0; i < treeParticleCount; i++) {
+                            const i3 = i * 3;
                             
-                            // 樹幹
-                            const trunkGeo = new THREE.CylinderGeometry(0.1 * scale, 0.15 * scale, 0.5 * scale, 8);
-                            const trunkMat = new THREE.MeshStandardMaterial({ 
-                                color: 0x8B4513,
-                                emissive: 0x4A2C1A,
-                                emissiveIntensity: 0.3
+                            // 圓錐形分佈（從頂部到底部）
+                            const height = Math.random(); // 0 到 1
+                            const radius = height * 2.5; // 底部更寬
+                            const angle = Math.random() * Math.PI * 2;
+                            
+                            // 中心密集，外圍稀疏
+                            const distance = Math.random() < 0.3 ? 
+                                Math.random() * radius * 0.5 : // 中心密集
+                                radius * 0.5 + Math.random() * radius * 0.5; // 外圍稀疏
+                            
+                            treePositions[i3] = Math.cos(angle) * distance;
+                            treePositions[i3 + 1] = height * 4 - 2; // 從 -2 到 2
+                            treePositions[i3 + 2] = Math.sin(angle) * distance;
+                            
+                            // 顏色漸變：頂部白色，向下漸變到粉紅色/洋紅色
+                            const whiteAmount = 1 - height * 0.6; // 頂部 1.0，底部 0.4
+                            const pinkAmount = height * 0.8;
+                            
+                            treeColors[i3] = Math.min(1, whiteAmount + pinkAmount * 0.8); // R
+                            treeColors[i3 + 1] = Math.min(1, whiteAmount + pinkAmount * 0.3); // G
+                            treeColors[i3 + 2] = Math.min(1, whiteAmount + pinkAmount * 1.0); // B
+                            
+                            // 大小：頂部較大，底部較小
+                            treeSizes[i] = (0.15 - height * 0.1) * (0.8 + Math.random() * 0.4);
+                            
+                            treeIntensities.push({
+                                base: 0.7 + Math.random() * 0.3,
+                                phase: Math.random() * Math.PI * 2,
+                                speed: 1 + Math.random() * 2
                             });
-                            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-                            trunk.position.y = y - 0.5 * scale;
-                            group.add(trunk);
-                            
-                            // 發光樹葉層
-                            for (let i = 0; i < 3; i++) {
-                                const layerGeo = new THREE.ConeGeometry(
-                                    (0.8 - i * 0.2) * scale,
-                                    (0.6 - i * 0.15) * scale,
-                                    8
-                                );
-                                const layerMat = new THREE.MeshStandardMaterial({
-                                    color: 0x228B22,
-                                    emissive: 0x00FF00,
-                                    emissiveIntensity: 0.4 + i * 0.1, // 越往上越亮
-                                    metalness: 0.2,
-                                    roughness: 0.6
-                                });
-                                const layer = new THREE.Mesh(layerGeo, layerMat);
-                                layer.position.y = y + i * 0.4 * scale;
-                                group.add(layer);
-                            }
-                            
-                            // 發光星星（頂部）
-                            const starGeo = new THREE.OctahedronGeometry(0.25 * scale, 0);
-                            const starMat = new THREE.MeshStandardMaterial({
-                                color: 0xFFD700,
-                                emissive: 0xFFD700,
-                                emissiveIntensity: 1.2,
-                                metalness: 0.1,
-                                roughness: 0.1
-                            });
-                            const star = new THREE.Mesh(starGeo, starMat);
-                            star.position.y = y + 1.2 * scale;
-                            star.rotation.z = Math.PI / 4;
-                            
-                            // 星星光暈
-                            const glowGeo = new THREE.SphereGeometry(0.4 * scale, 16, 16);
-                            const glowMat = new THREE.MeshBasicMaterial({
-                                color: 0xFFD700,
+                        }
+                        
+                        const treeGeometry = new THREE.BufferGeometry();
+                        treeGeometry.setAttribute('position', new THREE.BufferAttribute(treePositions, 3));
+                        treeGeometry.setAttribute('color', new THREE.BufferAttribute(treeColors, 3));
+                        treeGeometry.setAttribute('size', new THREE.BufferAttribute(treeSizes, 1));
+                        
+                        const treeMaterial = new THREE.PointsMaterial({
+                            size: 0.2,
+                            vertexColors: true,
+                            transparent: true,
+                            opacity: 0.95,
+                            sizeAttenuation: true,
+                            blending: THREE.AdditiveBlending // 發光效果
+                        });
+                        
+                        const particleTree = new THREE.Points(treeGeometry, treeMaterial);
+                        particleTree.position.set(0, 0, -5);
+                        scene.add(particleTree);
+                        
+                        // 頂部發光星星（樹頂）
+                        const topStarGeo = new THREE.OctahedronGeometry(0.3, 0);
+                        const topStarMat = new THREE.MeshStandardMaterial({
+                            color: 0xFFB6C1, // 淺粉色
+                            emissive: 0xFFB6C1,
+                            emissiveIntensity: 2.0,
+                            metalness: 0.1,
+                            roughness: 0.1
+                        });
+                        const topStar = new THREE.Mesh(topStarGeo, topStarMat);
+                        topStar.position.set(0, 2.2, -5);
+                        topStar.rotation.z = Math.PI / 4;
+                        
+                        // 星星光暈
+                        const glowGeo = new THREE.SphereGeometry(0.6, 16, 16);
+                        const glowMat = new THREE.MeshBasicMaterial({
+                            color: 0xFFB6C1,
+                            transparent: true,
+                            opacity: 0.4,
+                            side: THREE.BackSide
+                        });
+                        const glow = new THREE.Mesh(glowGeo, glowMat);
+                        topStar.add(glow);
+                        scene.add(topStar);
+                        
+                        // 底部發光圓環
+                        const createGlowRing = (radius, color, opacity, yPos) => {
+                            const ringGeo = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 32);
+                            const ringMat = new THREE.MeshBasicMaterial({
+                                color: color,
                                 transparent: true,
-                                opacity: 0.4,
-                                side: THREE.BackSide
+                                opacity: opacity,
+                                side: THREE.DoubleSide
                             });
-                            const glow = new THREE.Mesh(glowGeo, glowMat);
-                            star.add(glow);
-                            group.add(star);
-                            
-                            group.position.set(x, y, z);
-                            return group;
+                            const ring = new THREE.Mesh(ringGeo, ringMat);
+                            ring.rotation.x = -Math.PI / 2;
+                            ring.position.set(0, yPos, -5);
+                            return ring;
                         };
                         
-                        // 創建發光禮物盒
-                        const createGlowingGiftBox = (x, y, z, color1, color2) => {
-                            const group = new THREE.Group();
-                            
-                            const boxGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-                            const boxMat = new THREE.MeshStandardMaterial({
-                                color: color1,
-                                emissive: color1,
-                                emissiveIntensity: 0.5,
-                                metalness: 0.3,
-                                roughness: 0.4
-                            });
-                            const box = new THREE.Mesh(boxGeo, boxMat);
-                            group.add(box);
-                            
-                            const ribbonGeo1 = new THREE.BoxGeometry(0.5, 0.1, 0.1);
-                            const ribbonMat1 = new THREE.MeshStandardMaterial({
-                                color: color2,
-                                emissive: color2,
-                                emissiveIntensity: 0.8
-                            });
-                            const ribbon1 = new THREE.Mesh(ribbonGeo1, ribbonMat1);
-                            group.add(ribbon1);
-                            
-                            const ribbonGeo2 = new THREE.BoxGeometry(0.1, 0.5, 0.1);
-                            const ribbon2 = new THREE.Mesh(ribbonGeo2, ribbonMat1);
-                            group.add(ribbon2);
-                            
-                            group.position.set(x, y, z);
-                            return group;
+                        const glowRings = [
+                            createGlowRing(1.5, 0xFF69B4, 0.3, -2.2),
+                            createGlowRing(2.0, 0xFF1493, 0.2, -2.2),
+                            createGlowRing(2.5, 0xFF69B4, 0.15, -2.2)
+                        ];
+                        glowRings.forEach(ring => scene.add(ring));
+                        
+                        // 存儲用於動畫（確保變數在作用域內）
+                        const starSystems = [{ stars: backgroundStars, geometry: bgStarGeometry }];
+                        const treeSystem = { 
+                            tree: particleTree, 
+                            geometry: treeGeometry, 
+                            intensities: treeIntensities,
+                            topStar: topStar,
+                            glow: glow,
+                            glowRings: glowRings,
+                            textSprite: textSprite,
+                            glowText: glowText
                         };
                         
-                        // 添加發光聖誕元素
-                        const trees = [
-                            createGlowingChristmasTree(-4, -2, -3, 0.7),
-                            createGlowingChristmasTree(4, -2.5, -4, 0.6)
-                        ];
-                        trees.forEach(tree => scene.add(tree));
+                        // ========== 創建 3D 文字 "Merry Christmas!" ==========
+                        console.log('📝 創建 3D 文字...');
                         
-                        const gifts = [
-                            createGlowingGiftBox(-2, -2, -2, 0xDC143C, 0xFFD700),
-                            createGlowingGiftBox(2, -2, -3, 0x228B22, 0xFFD700)
-                        ];
-                        gifts.forEach(gift => scene.add(gift));
+                        // 使用 Canvas 創建文字紋理，然後轉換為 3D
+                        const createTextSprite = (text, fontSize = 0.5) => {
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.width = 512;
+                            canvas.height = 128;
+                            
+                            context.fillStyle = '#FFB6C1'; // 淺粉色
+                            context.font = `italic ${64}px 'Noto Serif TC', serif`;
+                            context.textAlign = 'center';
+                            context.textBaseline = 'middle';
+                            context.fillText(text, canvas.width / 2, canvas.height / 2);
+                            
+                            const texture = new THREE.CanvasTexture(canvas);
+                            texture.needsUpdate = true;
+                            
+                            const spriteMaterial = new THREE.SpriteMaterial({
+                                map: texture,
+                                transparent: true,
+                                opacity: 0.95
+                            });
+                            
+                            const sprite = new THREE.Sprite(spriteMaterial);
+                            sprite.scale.set(fontSize * 4, fontSize, 1);
+                            sprite.position.set(-2, 0, -4);
+                            
+                            return sprite;
+                        };
+                        
+                        const textSprite = createTextSprite('Merry Christmas!', 0.6);
+                        scene.add(textSprite);
+                        
+                        // 為文字添加發光效果（使用多個重疊的精靈）
+                        const createGlowText = (text, fontSize = 0.5) => {
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.width = 512;
+                            canvas.height = 128;
+                            
+                            context.fillStyle = '#FFB6C1';
+                            context.font = `italic ${64}px 'Noto Serif TC', serif`;
+                            context.textAlign = 'center';
+                            context.textBaseline = 'middle';
+                            context.shadowBlur = 20;
+                            context.shadowColor = '#FFB6C1';
+                            context.fillText(text, canvas.width / 2, canvas.height / 2);
+                            
+                            const texture = new THREE.CanvasTexture(canvas);
+                            texture.needsUpdate = true;
+                            
+                            const glowMaterial = new THREE.SpriteMaterial({
+                                map: texture,
+                                transparent: true,
+                                opacity: 0.3,
+                                blending: THREE.AdditiveBlending
+                            });
+                            
+                            const glowSprite = new THREE.Sprite(glowMaterial);
+                            glowSprite.scale.set(fontSize * 4.5, fontSize * 1.1, 1);
+                            glowSprite.position.set(-2, 0, -4.1);
+                            
+                            return glowSprite;
+                        };
+                        
+                        const glowText = createGlowText('Merry Christmas!', 0.6);
+                        scene.add(glowText);
+                        
+                        // 存儲用於動畫（在創建所有元素後）
+                        const starSystems = [{ stars: backgroundStars, geometry: bgStarGeometry }];
+                        const treeSystem = { 
+                            tree: particleTree, 
+                            geometry: treeGeometry, 
+                            intensities: treeIntensities,
+                            topStar: topStar,
+                            glow: glow,
+                            glowRings: glowRings,
+                            textSprite: textSprite,
+                            glowText: glowText
+                        };
                     
-                        // ========== 創建宇宙+聖誕節光源系統 ==========
+                        // ========== 創建光源系統 ==========
                         console.log('💡 創建光源系統...');
                         
-                        // 環境光（宇宙深空感）
-                        const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.3);
+                        // 環境光（深色背景）
+                        const ambientLight = new THREE.AmbientLight(0x000000, 0.2);
                         scene.add(ambientLight);
                         
-                        // 多個點光源創造發光效果（聖誕節+宇宙）
-                        const lights = [
-                            { color: 0xFFD700, pos: [5, 3, 5], intensity: 1.5, distance: 100 }, // 金色（聖誕）
-                            { color: 0x87CEEB, pos: [-5, 4, -5], intensity: 1.2, distance: 100 }, // 藍色（宇宙）
-                            { color: 0xFF0000, pos: [-3, 2, -4], intensity: 1.0, distance: 80 }, // 紅色（聖誕）
-                            { color: 0x00FF00, pos: [3, 2.5, -4], intensity: 0.9, distance: 80 }, // 綠色（聖誕）
-                            { color: 0xFFFFFF, pos: [0, 5, -6], intensity: 1.3, distance: 120 }, // 白色（宇宙）
-                            { color: 0xFF69B4, pos: [-2, 1, -3], intensity: 0.8, distance: 70 }, // 粉紅色（聖誕）
+                        // 點光源（照亮粒子樹和文字）
+                        const pointLights = [
+                            { light: new THREE.PointLight(0xFFB6C1, 1.5, 50), pos: [0, 1, -4] }, // 粉紅色（樹中心）
+                            { light: new THREE.PointLight(0xFF69B4, 1.2, 40), pos: [0, 2.5, -5] }, // 洋紅色（樹頂）
+                            { light: new THREE.PointLight(0xFFFFFF, 0.8, 30), pos: [-2, 0, -4] } // 白色（文字）
                         ];
                         
-                        const pointLights = lights.map(lightConfig => {
-                            const light = new THREE.PointLight(
-                                lightConfig.color,
-                                lightConfig.intensity,
-                                lightConfig.distance
-                            );
-                            light.position.set(...lightConfig.pos);
-                            scene.add(light);
-                            return { light, ...lightConfig };
+                        pointLights.forEach(lightObj => {
+                            lightObj.light.position.set(...lightObj.pos);
+                            scene.add(lightObj.light);
                         });
                         
-                        // 方向光（模擬遙遠恆星）
-                        const directionalLight = new THREE.DirectionalLight(0x87CEEB, 0.6);
-                        directionalLight.position.set(0, 10, 8);
+                        // 方向光（從上方照亮）
+                        const directionalLight = new THREE.DirectionalLight(0xFFB6C1, 0.5);
+                        directionalLight.position.set(0, 5, 5);
                         scene.add(directionalLight);
                     
                         // ========== 動畫循環 ==========
@@ -934,92 +910,74 @@
                             animationIdRef.current = requestAnimationFrame(animate);
                             const elapsedTime = clock.getElapsedTime();
                             
-                            // 1. 星空旋轉和閃爍
-                            starSystems.forEach((starSystem, sysIndex) => {
-                                const { stars, geometry } = starSystem;
-                                // 緩慢旋轉創造深度感
-                                stars.rotation.y = elapsedTime * stars.userData.speed * 0.1;
-                                
-                                // 更新星星閃爍（通過修改顏色亮度）
-                                const colors = geometry.attributes.color.array;
-                                const startIdx = sysIndex * starLayers[sysIndex].count * 3;
-                                
-                                for (let i = 0; i < starLayers[sysIndex].count; i++) {
-                                    const intensityIdx = startIdx / 3 + i;
-                                    if (starIntensities[intensityIdx]) {
-                                        const intensity = starIntensities[intensityIdx];
-                                        const brightness = intensity.base + 
-                                            Math.sin(elapsedTime * intensity.speed + intensity.phase) * 0.3;
-                                        
-                                        const i3 = startIdx + i * 3;
-                                        colors[i3] *= brightness;
-                                        colors[i3 + 1] *= brightness;
-                                        colors[i3 + 2] *= brightness;
-                                    }
-                                }
-                                geometry.attributes.color.needsUpdate = true;
-                            });
+                            // 1. 背景星星緩慢旋轉
+                            backgroundStars.rotation.y = elapsedTime * 0.05;
                             
-                            // 2. 大型閃爍星星動畫
-                            glowingStars.forEach((star, i) => {
-                                star.rotation.x = elapsedTime * (0.2 + i * 0.1);
-                                star.rotation.y = elapsedTime * (0.15 + i * 0.08);
+                            // 2. 粒子樹閃爍和動態效果
+                            if (treeSystem && treeSystem.geometry) {
+                                const treeColors = treeSystem.geometry.attributes.color.array;
+                                treeSystem.intensities.forEach((intensity, i) => {
+                                    const brightness = intensity.base + 
+                                        Math.sin(elapsedTime * intensity.speed + intensity.phase) * 0.3;
+                                    
+                                    const i3 = i * 3;
+                                    const baseR = treeColors[i3];
+                                    const baseG = treeColors[i3 + 1];
+                                    const baseB = treeColors[i3 + 2];
+                                    
+                                    treeColors[i3] = baseR * brightness;
+                                    treeColors[i3 + 1] = baseG * brightness;
+                                    treeColors[i3 + 2] = baseB * brightness;
+                                });
+                                treeSystem.geometry.attributes.color.needsUpdate = true;
                                 
-                                // 閃爍效果
-                                const intensity = 1.0 + Math.sin(elapsedTime * (1.5 + i * 0.3) + i) * 0.5;
-                                star.material.emissiveIntensity = intensity;
-                                
-                                // 光暈大小變化
-                                if (star.children[0]) {
-                                    star.children[0].scale.setScalar(1 + Math.sin(elapsedTime * 2 + i) * 0.2);
-                                }
-                            });
+                                // 粒子樹輕微旋轉和浮動
+                                treeSystem.tree.rotation.y = Math.sin(elapsedTime * 0.2) * 0.1;
+                                treeSystem.tree.position.y = Math.sin(elapsedTime * 0.3) * 0.2;
+                            }
                             
-                            // 3. 雪花飄落
-                            const posArray = snowGeometry.attributes.position.array;
-                            for (let i = 0; i < snowflakeCount; i++) {
-                                const i3 = i * 3;
-                                posArray[i3] += snowVelocities[i3];
-                                posArray[i3 + 1] += snowVelocities[i3 + 1];
-                                posArray[i3 + 2] += snowVelocities[i3 + 2];
+                            // 3. 頂部星星旋轉和閃爍
+                            if (treeSystem && treeSystem.topStar) {
+                                treeSystem.topStar.rotation.x = elapsedTime * 0.5;
+                                treeSystem.topStar.rotation.y = elapsedTime * 0.3;
+                                const starIntensity = 1.5 + Math.sin(elapsedTime * 2) * 0.5;
+                                treeSystem.topStar.material.emissiveIntensity = starIntensity;
                                 
-                                if (posArray[i3 + 1] < -12) {
-                                    posArray[i3] = (Math.random() - 0.5) * 25;
-                                    posArray[i3 + 1] = 12;
-                                    posArray[i3 + 2] = (Math.random() - 0.5) * 15;
+                                // 光暈脈動
+                                if (treeSystem.glow && treeSystem.topStar.children && treeSystem.topStar.children[0]) {
+                                    treeSystem.topStar.children[0].scale.setScalar(1 + Math.sin(elapsedTime * 1.5) * 0.3);
                                 }
                             }
-                            snowGeometry.attributes.position.needsUpdate = true;
-                            snowflakes.rotation.y = elapsedTime * 0.08;
                             
-                            // 4. 聖誕樹動畫
-                            trees.forEach((tree, i) => {
-                                tree.rotation.z = Math.sin(elapsedTime * 0.4 + i) * 0.03;
-                                // 頂部星星旋轉和閃爍
-                                const topStar = tree.children[tree.children.length - 1];
-                                if (topStar) {
-                                    topStar.rotation.y = elapsedTime * 0.5;
-                                    const intensity = 1.0 + Math.sin(elapsedTime * 2 + i) * 0.4;
-                                    topStar.material.emissiveIntensity = intensity;
-                                }
-                            });
+                            // 4. 底部圓環動畫
+                            if (treeSystem && treeSystem.glowRings) {
+                                treeSystem.glowRings.forEach((ring, i) => {
+                                    ring.rotation.z = elapsedTime * (0.2 + i * 0.1);
+                                    const scale = 1 + Math.sin(elapsedTime * (1 + i * 0.3) + i) * 0.1;
+                                    ring.scale.set(scale, scale, 1);
+                                });
+                            }
                             
-                            // 5. 禮物盒動畫
-                            gifts.forEach((gift, i) => {
-                                gift.rotation.y = elapsedTime * 0.3 * (i % 2 === 0 ? 1 : -1);
-                                gift.position.y = -2 + Math.sin(elapsedTime * 0.6 + i) * 0.15;
-                            });
+                            // 5. 文字動畫（輕微浮動和發光）
+                            if (treeSystem && treeSystem.textSprite && treeSystem.glowText) {
+                                treeSystem.textSprite.position.y = Math.sin(elapsedTime * 0.4) * 0.1;
+                                const textOpacity = 0.9 + Math.sin(elapsedTime * 1.5) * 0.05;
+                                treeSystem.textSprite.material.opacity = textOpacity;
+                                
+                                treeSystem.glowText.position.y = treeSystem.textSprite.position.y;
+                                treeSystem.glowText.material.opacity = 0.2 + Math.sin(elapsedTime * 2) * 0.1;
+                            }
                             
-                            // 6. 光源閃爍（聖誕燈效果）
+                            // 6. 光源閃爍
                             pointLights.forEach((lightObj, i) => {
-                                const baseIntensity = lightObj.intensity;
-                                const flicker = Math.sin(elapsedTime * (2 + i * 0.5) + i) * 0.3;
+                                const baseIntensity = lightObj.light.intensity;
+                                const flicker = Math.sin(elapsedTime * (1.5 + i * 0.3) + i) * 0.2;
                                 lightObj.light.intensity = baseIntensity + flicker;
                             });
                             
                             // 7. 相機輕微移動（創造沉浸感）
-                            camera.position.x = Math.sin(elapsedTime * 0.1) * 0.3;
-                            camera.position.y = Math.cos(elapsedTime * 0.08) * 0.2;
+                            camera.position.x = Math.sin(elapsedTime * 0.08) * 0.2;
+                            camera.position.y = Math.cos(elapsedTime * 0.06) * 0.15;
                             camera.lookAt(0, 0, -5);
                             
                             renderer.render(scene, camera);
@@ -1052,26 +1010,32 @@
                             if (system.geometry) system.geometry.dispose();
                             if (system.material) system.material.dispose();
                         });
-                        if (snowGeometry) snowGeometry.dispose();
-                        if (snowMaterial) snowMaterial.dispose();
-                        trees.forEach(tree => {
-                            tree.traverse(child => {
-                                if (child.geometry) child.geometry.dispose();
-                                if (child.material) child.material.dispose();
-                            });
-                        });
-                        gifts.forEach(gift => {
-                            gift.traverse(child => {
-                                if (child.geometry) child.geometry.dispose();
-                                if (child.material) child.material.dispose();
-                            });
-                        });
-                        glowingStars.forEach(star => {
-                            star.traverse(child => {
-                                if (child.geometry) child.geometry.dispose();
-                                if (child.material) child.material.dispose();
-                            });
-                        });
+                        if (treeSystem) {
+                            if (treeSystem.geometry) treeSystem.geometry.dispose();
+                            if (treeMaterial) treeMaterial.dispose();
+                            if (treeSystem.topStar) {
+                                treeSystem.topStar.traverse(child => {
+                                    if (child.geometry) child.geometry.dispose();
+                                    if (child.material) child.material.dispose();
+                                });
+                            }
+                            if (treeSystem.glowRings) {
+                                treeSystem.glowRings.forEach(ring => {
+                                    if (ring.geometry) ring.geometry.dispose();
+                                    if (ring.material) ring.material.dispose();
+                                });
+                            }
+                            if (treeSystem.textSprite) {
+                                if (treeSystem.textSprite.material.map) treeSystem.textSprite.material.map.dispose();
+                                if (treeSystem.textSprite.material) treeSystem.textSprite.material.dispose();
+                            }
+                            if (treeSystem.glowText) {
+                                if (treeSystem.glowText.material.map) treeSystem.glowText.material.map.dispose();
+                                if (treeSystem.glowText.material) treeSystem.glowText.material.dispose();
+                            }
+                        }
+                        if (bgStarGeometry) bgStarGeometry.dispose();
+                        if (bgStarMaterial) bgStarMaterial.dispose();
                         if (renderer) renderer.dispose();
                     };
                     } catch (err) {
