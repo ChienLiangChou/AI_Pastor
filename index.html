@@ -333,7 +333,7 @@
         };
 
         // =========================================================================
-        // 2D 聖誕節背景（備用方案，確保在所有設備上都能顯示）
+        // 2D 粒子聖誕樹背景（備用方案，確保在所有設備上都能顯示）
         // =========================================================================
         const ChristmasBackground2D = ({ containerRef }) => {
             const canvasRef = useRef(null);
@@ -462,6 +462,82 @@
                     ctx.restore();
                 };
                 
+                // 粒子類（用於粒子樹）
+                class Particle {
+                    constructor(x, y, heightRatio) {
+                        this.x = x;
+                        this.y = y;
+                        this.heightRatio = heightRatio; // 0 到 1，表示在樹中的高度
+                        this.size = (0.15 - heightRatio * 0.1) * (0.8 + Math.random() * 0.4);
+                        this.baseOpacity = 0.7 + Math.random() * 0.3;
+                        this.phase = Math.random() * Math.PI * 2;
+                        this.speed = 0.5 + Math.random() * 1.5;
+                    }
+                    
+                    update() {
+                        this.phase += 0.02;
+                    }
+                    
+                    draw(ctx, centerX, centerY, treeHeight) {
+                        ctx.save();
+                        const opacity = this.baseOpacity + Math.sin(this.phase * this.speed) * 0.2;
+                        ctx.globalAlpha = opacity;
+                        
+                        // 顏色漸變：頂部白色，向下漸變到粉紅色
+                        const whiteAmount = 1 - this.heightRatio * 0.6;
+                        const pinkAmount = this.heightRatio * 0.8;
+                        const r = Math.min(255, (whiteAmount + pinkAmount * 0.8) * 255);
+                        const g = Math.min(255, (whiteAmount + pinkAmount * 0.3) * 255);
+                        const b = Math.min(255, (whiteAmount + pinkAmount * 1.0) * 255);
+                        
+                        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+                
+                // 創建粒子樹
+                const createParticleTree = (centerX, centerY, treeHeight, treeWidth) => {
+                    const particles = [];
+                    const particleCount = 300;
+                    
+                    for (let i = 0; i < particleCount; i++) {
+                        const heightRatio = Math.random(); // 0 到 1
+                        const radius = heightRatio * treeWidth;
+                        const angle = Math.random() * Math.PI * 2;
+                        
+                        // 中心密集，外圍稀疏
+                        const distance = Math.random() < 0.3 ? 
+                            Math.random() * radius * 0.5 : 
+                            radius * 0.5 + Math.random() * radius * 0.5;
+                        
+                        const x = centerX + Math.cos(angle) * distance;
+                        const y = centerY - heightRatio * treeHeight;
+                        
+                        particles.push(new Particle(x, y, heightRatio));
+                    }
+                    
+                    return particles;
+                };
+                
+                let particleTree = null;
+                let treeCenterX = 0;
+                let treeCenterY = 0;
+                
+                // 初始化粒子樹
+                const initParticleTree = () => {
+                    const { width, height } = updateCanvasSize();
+                    if (!width || !height) return;
+                    
+                    treeCenterX = width * 0.5;
+                    treeCenterY = height * 0.7;
+                    particleTree = createParticleTree(treeCenterX, treeCenterY, height * 0.5, width * 0.3);
+                };
+                
                 // 動畫循環
                 const animate = () => {
                     const { width, height } = updateCanvasSize();
@@ -470,25 +546,82 @@
                         return;
                     }
                     
-                    // 清除畫布
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                    // 深黑色背景
+                    ctx.fillStyle = '#000000';
                     ctx.fillRect(0, 0, width, height);
+                    
+                    // 繪製細小背景星星
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    for (let i = 0; i < 200; i++) {
+                        const x = (i * 37) % width;
+                        const y = (i * 53) % height;
+                        const size = Math.random() * 0.5;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // 更新和繪製粒子樹
+                    if (particleTree) {
+                        particleTree.forEach(particle => {
+                            particle.update();
+                            particle.draw(ctx, treeCenterX, treeCenterY, height * 0.5);
+                        });
+                    }
+                    
+                    // 頂部發光星星
+                    const time = Date.now() * 0.001;
+                    const starSize = 8 + Math.sin(time * 2) * 2;
+                    const starOpacity = 0.8 + Math.sin(time * 2) * 0.2;
+                    ctx.save();
+                    ctx.globalAlpha = starOpacity;
+                    ctx.fillStyle = '#FFB6C1';
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#FFB6C1';
+                    ctx.beginPath();
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+                        const x = treeCenterX + Math.cos(angle) * starSize;
+                        const y = treeCenterY - height * 0.5 + Math.sin(angle) * starSize;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                    
+                    // 底部發光圓環
+                    const ringY = treeCenterY + height * 0.1;
+                    for (let i = 0; i < 3; i++) {
+                        const ringRadius = 30 + i * 15;
+                        const ringOpacity = (0.3 - i * 0.1) * (0.8 + Math.sin(time * 1.5 + i) * 0.2);
+                        ctx.save();
+                        ctx.strokeStyle = `rgba(255, 105, 180, ${ringOpacity})`;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(treeCenterX, ringY, ringRadius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                    
+                    // 繪製 "Merry Christmas!" 文字
+                    ctx.save();
+                    ctx.fillStyle = '#FFB6C1';
+                    ctx.font = `italic ${Math.min(24, width * 0.06)}px 'Noto Serif TC', serif`;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#FFB6C1';
+                    const textX = width * 0.1;
+                    const textY = height * 0.5;
+                    ctx.fillText('Merry Christmas!', textX, textY);
+                    ctx.restore();
                     
                     // 更新和繪製雪花
                     snowflakesRef.current.forEach(snowflake => {
                         snowflake.update(width, height);
                         snowflake.draw(ctx);
                     });
-                    
-                    // 繪製聖誕樹
-                    drawChristmasTree(ctx, width * 0.2, height * 0.85, 60);
-                    drawChristmasTree(ctx, width * 0.8, height * 0.9, 50);
-                    
-                    // 繪製閃爍星星
-                    const time = Date.now() * 0.001;
-                    drawStar(ctx, width * 0.15, height * 0.2, 8, 0.4 + Math.sin(time * 2) * 0.4);
-                    drawStar(ctx, width * 0.85, height * 0.15, 6, 0.4 + Math.sin(time * 2 + 1) * 0.4);
-                    drawStar(ctx, width * 0.5, height * 0.1, 10, 0.4 + Math.sin(time * 2 + 2) * 0.4);
                     
                     animationId = requestAnimationFrame(animate);
                 };
