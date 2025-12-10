@@ -19,6 +19,11 @@
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Three.js for 3D rendering -->
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js" 
+            onload="console.log('✅ Three.js 載入成功'); window.THREE_LOADED = true; if(window.THREE) window.dispatchEvent(new Event('threejsloaded'));" 
+            onerror="console.error('❌ Three.js 載入失敗'); window.THREE_LOADED = false;"></script>
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
 
@@ -37,7 +42,7 @@
         
         body { 
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 50%, #f0f4f8 100%);
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a1a 50%, #0a1a0a 100%);
             background-attachment: fixed;
             margin: 0;
             padding: 0;
@@ -245,6 +250,61 @@
         .min-h-0 {
             min-height: 0;
         }
+        
+        /* 3D 未來感樣式 */
+        .futuristic-glow {
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3),
+                        0 0 40px rgba(251, 191, 36, 0.2),
+                        0 0 60px rgba(251, 191, 36, 0.1);
+        }
+        
+        .futuristic-border {
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            box-shadow: inset 0 0 10px rgba(251, 191, 36, 0.1);
+        }
+        
+        .message-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+        
+        .message-3d:hover {
+            transform: translateZ(10px) scale(1.02);
+        }
+        
+        /* 3D Canvas 容器 */
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        /* 發光動畫 */
+        @keyframes glow-pulse {
+            0%, 100% {
+                opacity: 0.5;
+                filter: brightness(1);
+            }
+            50% {
+                opacity: 1;
+                filter: brightness(1.5);
+            }
+        }
+        
+        .glow-animate {
+            animation: glow-pulse 3s ease-in-out infinite;
+        }
+        
+        /* 3D 文字效果 */
+        .text-3d {
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5),
+                         0 0 20px rgba(251, 191, 36, 0.3),
+                         0 0 30px rgba(251, 191, 36, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -265,6 +325,7 @@
         // =========================================================================
 
         const { useState, useEffect, useRef } = React;
+        const THREE = window.THREE;
         
         const Icon = ({ name, size = 20, className = "" }) => {
             useEffect(() => { lucide.createIcons(); }, [name]);
@@ -272,7 +333,619 @@
         };
 
         // =========================================================================
-        // 粒子背景系統（純前端，無外部 API）
+        // 2D 聖誕節背景（備用方案，確保在所有設備上都能顯示）
+        // =========================================================================
+        const ChristmasBackground2D = ({ containerRef }) => {
+            const canvasRef = useRef(null);
+            const animationIdRef = useRef(null);
+            const snowflakesRef = useRef([]);
+            
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas || !containerRef?.current) return;
+                
+                const ctx = canvas.getContext('2d');
+                let animationId = null;
+                
+                const updateCanvasSize = () => {
+                    if (!containerRef?.current || !canvas) return;
+                    const container = containerRef.current;
+                    const rect = container.getBoundingClientRect();
+                    const dpr = window.devicePixelRatio || 1;
+                    const width = rect.width;
+                    const height = rect.height;
+                    
+                    canvas.style.width = width + 'px';
+                    canvas.style.height = height + 'px';
+                    canvas.width = width * dpr;
+                    canvas.height = height * dpr;
+                    ctx.scale(dpr, dpr);
+                    
+                    return { width, height };
+                };
+                
+                // 雪花類
+                class Snowflake {
+                    constructor(width, height) {
+                        this.x = Math.random() * width;
+                        this.y = Math.random() * height;
+                        this.size = Math.random() * 3 + 1;
+                        this.speed = Math.random() * 2 + 0.5;
+                        this.wind = (Math.random() - 0.5) * 0.5;
+                        this.opacity = Math.random() * 0.5 + 0.5;
+                    }
+                    
+                    update(width, height) {
+                        this.y += this.speed;
+                        this.x += this.wind;
+                        
+                        if (this.y > height) {
+                            this.y = -10;
+                            this.x = Math.random() * width;
+                        }
+                        if (this.x < 0) this.x = width;
+                        if (this.x > width) this.x = 0;
+                    }
+                    
+                    draw(ctx) {
+                        ctx.save();
+                        ctx.globalAlpha = this.opacity;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+                
+                // 初始化雪花
+                const initSnowflakes = () => {
+                    const { width, height } = updateCanvasSize();
+                    if (!width || !height) return;
+                    
+                    snowflakesRef.current = [];
+                    const count = 100;
+                    for (let i = 0; i < count; i++) {
+                        snowflakesRef.current.push(new Snowflake(width, height));
+                    }
+                };
+                
+                // 繪製聖誕樹（簡化版）
+                const drawChristmasTree = (ctx, x, y, size) => {
+                    ctx.save();
+                    // 樹幹
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(x - size * 0.1, y, size * 0.2, size * 0.3);
+                    
+                    // 樹葉（三角形）
+                    ctx.fillStyle = '#228B22';
+                    for (let i = 0; i < 3; i++) {
+                        const layerSize = size * (1 - i * 0.3);
+                        ctx.beginPath();
+                        ctx.moveTo(x, y - size * 0.8 + i * size * 0.3);
+                        ctx.lineTo(x - layerSize * 0.5, y - size * 0.3 + i * size * 0.3);
+                        ctx.lineTo(x + layerSize * 0.5, y - size * 0.3 + i * size * 0.3);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    
+                    // 星星
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - size * 0.9);
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+                        const x1 = x + Math.cos(angle) * size * 0.15;
+                        const y1 = y - size * 0.9 + Math.sin(angle) * size * 0.15;
+                        ctx.lineTo(x1, y1);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                };
+                
+                // 繪製星星
+                const drawStar = (ctx, x, y, size, opacity) => {
+                    ctx.save();
+                    ctx.globalAlpha = opacity;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+                        const x1 = x + Math.cos(angle) * size;
+                        const y1 = y + Math.sin(angle) * size;
+                        if (i === 0) ctx.moveTo(x1, y1);
+                        else ctx.lineTo(x1, y1);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                };
+                
+                // 動畫循環
+                const animate = () => {
+                    const { width, height } = updateCanvasSize();
+                    if (!width || !height) {
+                        animationId = requestAnimationFrame(animate);
+                        return;
+                    }
+                    
+                    // 清除畫布
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                    ctx.fillRect(0, 0, width, height);
+                    
+                    // 更新和繪製雪花
+                    snowflakesRef.current.forEach(snowflake => {
+                        snowflake.update(width, height);
+                        snowflake.draw(ctx);
+                    });
+                    
+                    // 繪製聖誕樹
+                    drawChristmasTree(ctx, width * 0.2, height * 0.85, 60);
+                    drawChristmasTree(ctx, width * 0.8, height * 0.9, 50);
+                    
+                    // 繪製閃爍星星
+                    const time = Date.now() * 0.001;
+                    drawStar(ctx, width * 0.15, height * 0.2, 8, 0.4 + Math.sin(time * 2) * 0.4);
+                    drawStar(ctx, width * 0.85, height * 0.15, 6, 0.4 + Math.sin(time * 2 + 1) * 0.4);
+                    drawStar(ctx, width * 0.5, height * 0.1, 10, 0.4 + Math.sin(time * 2 + 2) * 0.4);
+                    
+                    animationId = requestAnimationFrame(animate);
+                };
+                
+                // 初始化
+                setTimeout(() => {
+                    initSnowflakes();
+                    animate();
+                }, 100);
+                
+                // 處理窗口大小變化
+                const handleResize = () => {
+                    initSnowflakes();
+                };
+                window.addEventListener('resize', handleResize);
+                
+                // 清理
+                return () => {
+                    if (animationId) cancelAnimationFrame(animationId);
+                    window.removeEventListener('resize', handleResize);
+                };
+            }, [containerRef]);
+            
+            return (
+                <canvas
+                    ref={canvasRef}
+                    className="absolute top-0 left-0 pointer-events-none"
+                    style={{
+                        zIndex: 0,
+                        width: '100%',
+                        height: '100%',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0
+                    }}
+                />
+            );
+        };
+
+        // =========================================================================
+        // 3D 聖誕節未來感場景（使用原生 Three.js）
+        // =========================================================================
+        const FuturisticScene = ({ containerRef }) => {
+            const canvasRef = useRef(null);
+            const sceneRef = useRef(null);
+            const rendererRef = useRef(null);
+            const cameraRef = useRef(null);
+            const animationIdRef = useRef(null);
+            const [error, setError] = useState(null);
+            const [threeLoaded, setThreeLoaded] = useState(false);
+            
+            useEffect(() => {
+                let retryCount = 0;
+                const maxRetries = 50; // 最多嘗試 5 秒
+                
+                // 等待 Three.js 載入
+                const checkThreeJS = () => {
+                    if (window.THREE && window.THREE.Scene) {
+                        console.log('✅ Three.js 已載入');
+                        setThreeLoaded(true);
+                        setTimeout(initScene, 200); // 稍微延遲確保完全載入
+                        return;
+                    }
+                    
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        setTimeout(checkThreeJS, 100);
+                    } else {
+                        console.warn('❌ Three.js 載入超時，使用 2D 備用背景');
+                        setError('Three.js timeout');
+                    }
+                };
+                
+                const initScene = () => {
+                    console.log('🎨 開始初始化 3D 場景...');
+                    
+                    // 檢查 Three.js 是否載入
+                    if (!window.THREE || !window.THREE.Scene) {
+                        console.warn('Three.js 未載入，使用備用 2D 背景');
+                        setError('Three.js not loaded');
+                        return;
+                    }
+                    
+                    // 等待容器準備好
+                    if (!canvasRef.current || !containerRef?.current) {
+                        console.log('⏳ 等待容器準備...');
+                        setTimeout(() => {
+                            if (canvasRef.current && containerRef?.current) {
+                                initScene(); // 重新嘗試初始化
+                            } else {
+                                console.warn('容器未準備好');
+                                setError('Container not ready');
+                            }
+                        }, 200);
+                        return;
+                    }
+                    
+                    const THREE = window.THREE;
+                    
+                    try {
+                        const container = containerRef.current;
+                        let width = container.clientWidth;
+                        let height = container.clientHeight;
+                        
+                        console.log(`📐 容器尺寸: ${width}x${height}`);
+                        
+                        // 確保有有效的尺寸
+                        if (width === 0 || height === 0) {
+                            width = window.innerWidth || 800;
+                            height = window.innerHeight || 600;
+                            console.log(`📐 使用窗口尺寸: ${width}x${height}`);
+                        }
+                        
+                        // 創建場景
+                        const scene = new THREE.Scene();
+                        scene.background = null; // 透明背景
+                        sceneRef.current = scene;
+                        console.log('✅ 場景創建成功');
+                        
+                        // 創建相機
+                        const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+                        camera.position.z = 5;
+                        cameraRef.current = camera;
+                        
+                        // 創建渲染器（移動設備優化）
+                        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                        console.log(`📱 移動設備: ${isMobile}`);
+                        
+                        let renderer;
+                        try {
+                            renderer = new THREE.WebGLRenderer({ 
+                                canvas: canvasRef.current,
+                                alpha: true,
+                                antialias: !isMobile,
+                                powerPreference: "high-performance"
+                            });
+                            console.log('✅ WebGL 渲染器創建成功');
+                        } catch (e) {
+                            console.error('❌ WebGL 渲染器創建失敗:', e);
+                            setError('WebGL not supported');
+                            return;
+                        }
+                        
+                        renderer.setSize(width, height);
+                        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));
+                        rendererRef.current = renderer;
+                        
+                        // 聖誕節雪花粒子系統
+                    const snowflakeCount = isMobile ? 200 : 400;
+                    const positions = new Float32Array(snowflakeCount * 3);
+                    const colors = new Float32Array(snowflakeCount * 3);
+                    const velocities = new Float32Array(snowflakeCount * 3);
+                    
+                    for (let i = 0; i < snowflakeCount; i++) {
+                        const i3 = i * 3;
+                        positions[i3] = (Math.random() - 0.5) * 20;
+                        positions[i3 + 1] = Math.random() * 20;
+                        positions[i3 + 2] = (Math.random() - 0.5) * 20;
+                        
+                        // 白色雪花
+                        colors[i3] = 1; // R
+                        colors[i3 + 1] = 1; // G
+                        colors[i3 + 2] = 1; // B
+                        
+                        // 隨機下降速度
+                        velocities[i3] = (Math.random() - 0.5) * 0.02; // X 飄動
+                        velocities[i3 + 1] = -0.01 - Math.random() * 0.02; // Y 下降
+                        velocities[i3 + 2] = (Math.random() - 0.5) * 0.01; // Z 深度
+                    }
+                    
+                    const snowGeometry = new THREE.BufferGeometry();
+                    snowGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    snowGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                    
+                    const snowMaterial = new THREE.PointsMaterial({
+                        size: isMobile ? 0.15 : 0.2,
+                        vertexColors: true,
+                        transparent: true,
+                        opacity: 0.9,
+                        sizeAttenuation: true
+                    });
+                    
+                    const snowflakes = new THREE.Points(snowGeometry, snowMaterial);
+                    scene.add(snowflakes);
+                    
+                    // 創建聖誕樹（圓錐體）
+                    const createChristmasTree = (x, y, z, scale = 1) => {
+                        const group = new THREE.Group();
+                        
+                        // 樹幹
+                        const trunkGeo = new THREE.CylinderGeometry(0.1 * scale, 0.15 * scale, 0.5 * scale, 8);
+                        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+                        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                        trunk.position.y = y - 0.5 * scale;
+                        group.add(trunk);
+                        
+                        // 樹葉層（多層圓錐）
+                        for (let i = 0; i < 3; i++) {
+                            const layerGeo = new THREE.ConeGeometry(
+                                (0.8 - i * 0.2) * scale,
+                                (0.6 - i * 0.15) * scale,
+                                8
+                            );
+                            const layerMat = new THREE.MeshStandardMaterial({
+                                color: 0x228B22, // 深綠色
+                                emissive: 0x00ff00,
+                                emissiveIntensity: 0.2,
+                                metalness: 0.3,
+                                roughness: 0.7
+                            });
+                            const layer = new THREE.Mesh(layerGeo, layerMat);
+                            layer.position.y = y + i * 0.4 * scale;
+                            group.add(layer);
+                        }
+                        
+                        // 星星（頂部）
+                        const starGeo = new THREE.OctahedronGeometry(0.2 * scale, 0);
+                        const starMat = new THREE.MeshStandardMaterial({
+                            color: 0xFFD700, // 金色
+                            emissive: 0xFFD700,
+                            emissiveIntensity: 0.8,
+                            metalness: 0.9,
+                            roughness: 0.1
+                        });
+                        const star = new THREE.Mesh(starGeo, starMat);
+                        star.position.y = y + 1.2 * scale;
+                        star.rotation.z = Math.PI / 4;
+                        group.add(star);
+                        
+                        group.position.set(x, y, z);
+                        return group;
+                    };
+                    
+                    // 創建禮物盒
+                    const createGiftBox = (x, y, z, color1, color2) => {
+                        const group = new THREE.Group();
+                        
+                        // 盒子
+                        const boxGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+                        const boxMat = new THREE.MeshStandardMaterial({
+                            color: color1,
+                            emissive: color1,
+                            emissiveIntensity: 0.3,
+                            metalness: 0.5,
+                            roughness: 0.5
+                        });
+                        const box = new THREE.Mesh(boxGeo, boxMat);
+                        group.add(box);
+                        
+                        // 緞帶
+                        const ribbonGeo1 = new THREE.BoxGeometry(0.5, 0.1, 0.1);
+                        const ribbonMat1 = new THREE.MeshStandardMaterial({
+                            color: color2,
+                            emissive: color2,
+                            emissiveIntensity: 0.5
+                        });
+                        const ribbon1 = new THREE.Mesh(ribbonGeo1, ribbonMat1);
+                        group.add(ribbon1);
+                        
+                        const ribbonGeo2 = new THREE.BoxGeometry(0.1, 0.5, 0.1);
+                        const ribbon2 = new THREE.Mesh(ribbonGeo2, ribbonMat1);
+                        group.add(ribbon2);
+                        
+                        group.position.set(x, y, z);
+                        return group;
+                    };
+                    
+                    // 創建閃爍星星
+                    const createStar = (x, y, z) => {
+                        const starGeo = new THREE.OctahedronGeometry(0.15, 0);
+                        const starMat = new THREE.MeshStandardMaterial({
+                            color: 0xFFD700,
+                            emissive: 0xFFD700,
+                            emissiveIntensity: 0.6,
+                            metalness: 0.9,
+                            roughness: 0.1
+                        });
+                        const star = new THREE.Mesh(starGeo, starMat);
+                        star.position.set(x, y, z);
+                        return star;
+                    };
+                    
+                    // 添加聖誕元素
+                    const trees = [
+                        createChristmasTree(-4, -2, -3, 0.8),
+                        createChristmasTree(4, -2.5, -4, 0.6)
+                    ];
+                    trees.forEach(tree => scene.add(tree));
+                    
+                    const gifts = [
+                        createGiftBox(-2, -2, -2, 0xDC143C, 0xFFD700), // 紅色禮物，金色緞帶
+                        createGiftBox(2, -2, -3, 0x228B22, 0xFFD700)  // 綠色禮物，金色緞帶
+                    ];
+                    gifts.forEach(gift => scene.add(gift));
+                    
+                    const stars = [
+                        createStar(-3, 2, -2),
+                        createStar(3, 1.5, -3),
+                        createStar(0, 2.5, -4),
+                        createStar(-1.5, 1, -2.5),
+                        createStar(1.5, 1.8, -3.5)
+                    ];
+                    stars.forEach(star => scene.add(star));
+                    
+                    // 聖誕節光源（溫暖的色調）
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+                    scene.add(ambientLight);
+                    
+                    // 金色點光源（模擬燭光）
+                    const pointLight1 = new THREE.PointLight(0xFFD700, 1.2, 100);
+                    pointLight1.position.set(5, 3, 5);
+                    scene.add(pointLight1);
+                    
+                    // 紅色點光源（聖誕燈光）
+                    const pointLight2 = new THREE.PointLight(0xFF0000, 0.8, 100);
+                    pointLight2.position.set(-5, 2, -5);
+                    scene.add(pointLight2);
+                    
+                    // 綠色點光源
+                    const pointLight3 = new THREE.PointLight(0x00FF00, 0.6, 100);
+                    pointLight3.position.set(0, 4, -6);
+                    scene.add(pointLight3);
+                    
+                    // 方向光（模擬月光）
+                    const directionalLight = new THREE.DirectionalLight(0x87CEEB, 0.5);
+                    directionalLight.position.set(0, 10, 5);
+                    scene.add(directionalLight);
+                    
+                    // 動畫循環
+                    const clock = new THREE.Clock();
+                    const animate = () => {
+                        animationIdRef.current = requestAnimationFrame(animate);
+                        
+                        const elapsedTime = clock.getElapsedTime();
+                        
+                        // 雪花飄落
+                        const posArray = snowGeometry.attributes.position.array;
+                        for (let i = 0; i < snowflakeCount; i++) {
+                            const i3 = i * 3;
+                            posArray[i3] += velocities[i3];
+                            posArray[i3 + 1] += velocities[i3 + 1];
+                            posArray[i3 + 2] += velocities[i3 + 2];
+                            
+                            // 重置位置（循環）
+                            if (posArray[i3 + 1] < -10) {
+                                posArray[i3] = (Math.random() - 0.5) * 20;
+                                posArray[i3 + 1] = 10;
+                                posArray[i3 + 2] = (Math.random() - 0.5) * 20;
+                            }
+                        }
+                        snowGeometry.attributes.position.needsUpdate = true;
+                        
+                        // 旋轉雪花群
+                        snowflakes.rotation.y = elapsedTime * 0.1;
+                        
+                        // 聖誕樹輕微搖擺
+                        trees.forEach((tree, i) => {
+                            tree.rotation.z = Math.sin(elapsedTime * 0.5 + i) * 0.05;
+                            tree.children[tree.children.length - 1].rotation.y = elapsedTime * 0.3; // 星星旋轉
+                        });
+                        
+                        // 禮物盒旋轉
+                        gifts.forEach((gift, i) => {
+                            gift.rotation.y = elapsedTime * 0.2 * (i % 2 === 0 ? 1 : -1);
+                            gift.position.y = -2 + Math.sin(elapsedTime * 0.5 + i) * 0.1;
+                        });
+                        
+                        // 星星閃爍
+                        stars.forEach((star, i) => {
+                            star.rotation.x = elapsedTime * 0.3;
+                            star.rotation.y = elapsedTime * 0.2;
+                            const intensity = 0.4 + Math.sin(elapsedTime * 2 + i) * 0.4;
+                            star.material.emissiveIntensity = intensity;
+                        });
+                        
+                        // 光源閃爍（模擬聖誕燈）
+                        pointLight2.intensity = 0.6 + Math.sin(elapsedTime * 3) * 0.2;
+                        pointLight3.intensity = 0.4 + Math.sin(elapsedTime * 3 + Math.PI) * 0.2;
+                        
+                        renderer.render(scene, camera);
+                    };
+                    animate();
+                    
+                    // 處理窗口大小變化
+                    const handleResize = () => {
+                        if (!containerRef?.current || !camera || !renderer) return;
+                        const newWidth = containerRef.current.clientWidth || window.innerWidth;
+                        const newHeight = containerRef.current.clientHeight || window.innerHeight;
+                        if (newWidth > 0 && newHeight > 0) {
+                            camera.aspect = newWidth / newHeight;
+                            camera.updateProjectionMatrix();
+                            renderer.setSize(newWidth, newHeight);
+                        }
+                    };
+                    
+                    window.addEventListener('resize', handleResize);
+                    
+                    // 清理函數
+                    return () => {
+                        if (animationIdRef.current) {
+                            cancelAnimationFrame(animationIdRef.current);
+                        }
+                        window.removeEventListener('resize', handleResize);
+                        if (snowGeometry) snowGeometry.dispose();
+                        if (snowMaterial) snowMaterial.dispose();
+                        trees.forEach(tree => {
+                            tree.children.forEach(child => {
+                                if (child.geometry) child.geometry.dispose();
+                                if (child.material) child.material.dispose();
+                            });
+                        });
+                        gifts.forEach(gift => {
+                            gift.children.forEach(child => {
+                                if (child.geometry) child.geometry.dispose();
+                                if (child.material) child.material.dispose();
+                            });
+                        });
+                        stars.forEach(star => {
+                            if (star.geometry) star.geometry.dispose();
+                            if (star.material) star.material.dispose();
+                        });
+                        if (renderer) renderer.dispose();
+                    };
+                    } catch (err) {
+                        console.error('❌ 3D 場景初始化錯誤:', err);
+                        setError(err.message);
+                    }
+                };
+                
+                // 開始檢查
+                checkThreeJS();
+            }, [containerRef]);
+            
+            // 如果有錯誤，不顯示 3D canvas，讓 2D 背景顯示
+            if (error) {
+                console.log('⚠️ 3D 場景錯誤，使用 2D 備用背景');
+                return null;
+            }
+            
+            return (
+                <canvas
+                    ref={canvasRef}
+                    className="absolute top-0 left-0 pointer-events-none"
+                    style={{
+                        zIndex: 1, // 3D 在 2D 之上
+                        width: '100%',
+                        height: '100%',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0
+                    }}
+                />
+            );
+        };
+
+        // =========================================================================
+        // 舊的 2D 粒子背景系統（保留作為備用）
         // =========================================================================
         const ParticleBackground = ({ containerRef }) => {
             const canvasRef = useRef(null);
@@ -720,10 +1393,10 @@ Your task is to answer the user's questions, combining biblical truth with broad
             };
 
             return (
-                <div className={`flex w-full mb-6 message-enter ${isUser ? 'justify-end' : 'justify-start'}`} style={{ position: 'relative', zIndex: 10 }}>
+                <div className={`flex w-full mb-6 message-enter message-3d ${isUser ? 'justify-end' : 'justify-start'}`} style={{ position: 'relative', zIndex: 10 }}>
                     {!isUser && (
                         <div className="flex-shrink-0 mr-2 sm:mr-3 mt-1" style={{ position: 'relative', zIndex: 10 }}>
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-amber-400 shadow-lg border-2 border-amber-500/50 ring-2 ring-amber-500/20">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-amber-400 shadow-lg border-2 border-amber-500/50 ring-2 ring-amber-500/20 futuristic-glow glow-animate">
                                 <Icon name="cross" size={16} className="sm:w-5 sm:h-5" />
                             </div>
                         </div>
@@ -731,8 +1404,8 @@ Your task is to answer the user's questions, combining biblical truth with broad
                     
                     <div className={`max-w-[90%] sm:max-w-[85%] md:max-w-[75%] rounded-3xl px-4 sm:px-5 md:px-6 py-3.5 sm:py-4 md:py-5 ${
                         isUser 
-                        ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-white rounded-br-md shadow-lg shadow-amber-900/30' 
-                        : 'bg-white text-slate-800 border border-stone-200/80 rounded-bl-md shadow-lg shadow-stone-200/50 backdrop-blur-sm'
+                        ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-white rounded-br-md shadow-lg shadow-amber-900/30 futuristic-glow' 
+                        : 'bg-white/90 text-slate-800 border-2 border-amber-300/30 rounded-bl-md shadow-lg shadow-stone-200/50 backdrop-blur-md futuristic-border'
                     }`} style={{ position: 'relative', zIndex: 10 }}>
                         <div className={`text-xs sm:text-sm md:text-base leading-relaxed font-serif ${!isUser ? 'text-justify' : ''}`}>
                             {formatText(content)}
@@ -844,16 +1517,16 @@ Your task is to answer the user's questions, combining biblical truth with broad
             };
 
             return (
-                <div className="flex flex-col h-screen w-full max-w-4xl mx-auto shadow-2xl bg-gradient-to-b from-white via-[#faf9f6] to-[#f5f7fa] overflow-hidden" style={{ width: '100%', maxWidth: '100%', position: 'relative', overflow: 'hidden' }}>
-                    {/* Header - 極致緊湊的設計，確保模式切換和輸入框可見 */}
-                    <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-amber-50 px-2 sm:px-4 py-0.5 sm:py-1.5 shadow-lg shadow-slate-900/20 flex items-center justify-between z-10 shrink-0 border-b border-amber-500/20" style={{ height: '38px', minHeight: '38px', maxHeight: '38px' }}>
+                <div className="flex flex-col h-screen w-full max-w-4xl mx-auto shadow-2xl bg-gradient-to-b from-slate-900/95 via-slate-800/90 to-slate-900/95 overflow-hidden backdrop-blur-xl" style={{ width: '100%', maxWidth: '100%', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
+                    {/* Header - 3D 未來感設計 */}
+                    <header className="bg-gradient-to-r from-slate-900/95 via-slate-800/90 to-slate-900/95 text-amber-50 px-2 sm:px-4 py-0.5 sm:py-1.5 shadow-lg shadow-amber-900/30 flex items-center justify-between z-10 shrink-0 border-b border-amber-500/30 futuristic-border" style={{ height: '38px', minHeight: '38px', maxHeight: '38px', backdropFilter: 'blur(10px)' }}>
                         <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
                             <div className="bg-gradient-to-br from-amber-500 to-amber-600 p-0.5 sm:p-1 rounded-lg shrink-0 shadow-md shadow-amber-600/30">
                                 <Icon name="cross" size={12} className="sm:w-4 sm:h-4 text-white" />
                             </div>
                             <div className="min-w-0">
-                                <h1 className="text-xs sm:text-base md:text-xl font-bold tracking-wide font-serif truncate bg-gradient-to-r from-amber-50 to-amber-100 bg-clip-text text-transparent">AI 牧師</h1>
-                                <p className="text-xs text-amber-200/80 hidden sm:block">你的隨身靈修導師</p>
+                                <h1 className="text-xs sm:text-base md:text-xl font-bold tracking-wide font-serif truncate bg-gradient-to-r from-amber-50 to-amber-100 bg-clip-text text-transparent text-3d">AI 牧師</h1>
+                                <p className="text-xs text-amber-200/80 hidden sm:block glow-animate">你的隨身靈修導師</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -869,15 +1542,15 @@ Your task is to answer the user's questions, combining biblical truth with broad
                         </div>
                     </header>
 
-                    {/* Mode Toggle - 極致緊湊的設計，確保與輸入框同時可見 */}
-                    <div className="mode-toggle-container bg-gradient-to-b from-stone-50 to-stone-100 p-0.5 sm:p-1.5 border-b border-stone-200/80 flex justify-center shrink-0 shadow-sm" style={{ height: '36px', minHeight: '36px', maxHeight: '36px' }}>
-                         <div className="flex bg-stone-200/60 backdrop-blur-sm p-0.5 sm:p-1 rounded-xl w-full max-w-md shadow-inner">
+                    {/* Mode Toggle - 3D 未來感設計 */}
+                    <div className="mode-toggle-container bg-gradient-to-b from-slate-800/90 to-slate-900/90 p-0.5 sm:p-1.5 border-b border-amber-500/30 flex justify-center shrink-0 shadow-sm futuristic-border" style={{ height: '36px', minHeight: '36px', maxHeight: '36px', backdropFilter: 'blur(10px)' }}>
+                         <div className="flex bg-slate-700/40 backdrop-blur-sm p-0.5 sm:p-1 rounded-xl w-full max-w-md shadow-inner futuristic-border">
                             <button
                                 onClick={() => setMode('bible-only')}
                                 className={`flex-1 flex items-center justify-center px-1 sm:px-2 md:px-4 py-0.5 sm:py-1 md:py-2 rounded-lg text-[10px] sm:text-xs md:text-sm font-medium transition-all duration-200 active:scale-95 ${
                                     mode === 'bible-only' 
-                                        ? 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 shadow-md shadow-amber-200/50 border border-amber-300/50' 
-                                        : 'text-stone-500 hover:text-stone-700 hover:bg-stone-100/50'
+                                        ? 'bg-gradient-to-r from-amber-500/80 to-amber-600/80 text-amber-50 shadow-md shadow-amber-500/50 border border-amber-400/50 futuristic-glow' 
+                                        : 'text-amber-200/60 hover:text-amber-100 hover:bg-slate-700/50'
                                 }`}
                             >
                                 <Icon name="book-open" size={10} className="sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1" /> 
@@ -887,8 +1560,8 @@ Your task is to answer the user's questions, combining biblical truth with broad
                                 onClick={() => setMode('bible-plus')}
                                 className={`flex-1 flex items-center justify-center px-1 sm:px-2 md:px-4 py-0.5 sm:py-1 md:py-2 rounded-lg text-[10px] sm:text-xs md:text-sm font-medium transition-all duration-200 active:scale-95 ${
                                     mode === 'bible-plus' 
-                                        ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-md shadow-blue-200/50 border border-blue-300/50' 
-                                        : 'text-stone-500 hover:text-stone-700 hover:bg-stone-100/50'
+                                        ? 'bg-gradient-to-r from-blue-500/80 to-blue-600/80 text-blue-50 shadow-md shadow-blue-500/50 border border-blue-400/50 futuristic-glow' 
+                                        : 'text-amber-200/60 hover:text-amber-100 hover:bg-slate-700/50'
                                 }`}
                             >
                                 <Icon name="globe" size={10} className="sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1" /> 
@@ -899,7 +1572,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
 
                     {/* Chat Area - 使用 flex-1 確保佔用剩餘空間，不擠壓固定元素 */}
                     <div ref={chatAreaRef} className="chat-area flex-1 overflow-y-auto px-2 sm:px-4 py-1 sm:py-2 md:py-4 scrollbar-thin min-h-0 relative" style={{ position: 'relative', overflowY: 'auto' }}>
-                        {/* 粒子背景 - 絕對定位在背景層，確保不阻擋內容 */}
+                        {/* 聖誕節未來感背景 - 絕對定位在背景層，確保不阻擋內容 */}
                         <div style={{ 
                             position: 'absolute', 
                             top: 0, 
@@ -908,9 +1581,13 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             bottom: 0, 
                             zIndex: 0, 
                             pointerEvents: 'none',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            opacity: 0.8
                         }}>
-                            <ParticleBackground containerRef={chatAreaRef} />
+                            {/* 優先使用 3D，失敗則使用 2D 聖誕節背景 */}
+                            <FuturisticScene containerRef={chatAreaRef} />
+                            {/* 2D 聖誕節背景作為備用 */}
+                            <ChristmasBackground2D containerRef={chatAreaRef} />
                         </div>
                         
                         {/* 訊息內容（在粒子之上） - 確保有正確的 z-index 和定位 */}
@@ -954,8 +1631,8 @@ Your task is to answer the user's questions, combining biblical truth with broad
                         </div>
                     </div>
 
-                    {/* Input Area - 固定在底部，支援多行輸入（3行） */}
-                    <div className="input-container bg-gradient-to-t from-white via-white to-stone-50 border-t border-stone-200/80 shrink-0 safe-area-inset-bottom shadow-lg shadow-stone-200/30" style={{ minHeight: '60px', maxHeight: '60px', padding: '0.375rem' }}>
+                    {/* Input Area - 3D 未來感設計 */}
+                    <div className="input-container bg-gradient-to-t from-slate-900/95 via-slate-800/90 to-slate-900/95 border-t border-amber-500/30 shrink-0 safe-area-inset-bottom shadow-lg shadow-amber-900/30 futuristic-border" style={{ minHeight: '60px', maxHeight: '60px', padding: '0.375rem', backdropFilter: 'blur(10px)' }}>
                         <form onSubmit={handleSend} className="relative flex items-end gap-1 sm:gap-2">
                             <div className="flex-1 relative">
                                 <textarea
@@ -985,8 +1662,8 @@ Your task is to answer the user's questions, combining biblical truth with broad
                                 disabled={!input.trim() || isLoading}
                                 className={`p-2 sm:p-2.5 md:p-3 rounded-full shadow-lg transition-all duration-200 active:scale-90 shrink-0 mb-0.5 sm:mb-1 ${
                                     !input.trim() || isLoading
-                                    ? 'bg-gradient-to-br from-stone-200 to-stone-300 text-stone-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:via-amber-800 hover:to-amber-900 active:from-amber-800 active:via-amber-900 active:to-amber-950 text-white shadow-amber-900/30 hover:shadow-xl hover:shadow-amber-900/40 hover:scale-105'
+                                    ? 'bg-gradient-to-br from-slate-700 to-slate-800 text-slate-400 cursor-not-allowed border border-slate-600/50'
+                                    : 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:via-amber-800 hover:to-amber-900 active:from-amber-800 active:via-amber-900 active:to-amber-950 text-white shadow-amber-900/30 hover:shadow-xl hover:shadow-amber-900/40 hover:scale-105 futuristic-glow border-2 border-amber-400/50'
                                 }`}
                             >
                                 <Icon name="send" size={16} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
