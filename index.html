@@ -798,19 +798,6 @@
                         ];
                         glowRings.forEach(ring => scene.add(ring));
                         
-                        // 存儲用於動畫（確保變數在作用域內）
-                        const starSystems = [{ stars: backgroundStars, geometry: bgStarGeometry }];
-                        const treeSystem = { 
-                            tree: particleTree, 
-                            geometry: treeGeometry, 
-                            intensities: treeIntensities,
-                            topStar: topStar,
-                            glow: glow,
-                            glowRings: glowRings,
-                            textSprite: textSprite,
-                            glowText: glowText
-                        };
-                        
                         // ========== 創建 3D 文字 "Merry Christmas!" ==========
                         console.log('📝 創建 3D 文字...');
                         
