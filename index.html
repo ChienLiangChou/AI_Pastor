@@ -305,6 +305,11 @@
                          0 0 20px rgba(251, 191, 36, 0.3),
                          0 0 30px rgba(251, 191, 36, 0.2);
         }
+        
+        /* 文字掃光效果（按照您提供的代碼） */
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
     </style>
 </head>
 <body>
@@ -747,12 +752,11 @@
                         sceneRef.current = scene;
                         console.log('✅ 場景創建成功，背景色: 黑色');
                         
-                        // 創建相機
+                        // 創建相機（稍微拉高，按照您提供的代碼）
                         const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-                        camera.position.set(0, 0, 5);
-                        camera.lookAt(0, 0, -5); // 看向場景中心（粒子樹位置）
+                        camera.position.set(0, 5, 10); // 相機位置稍微拉高
                         cameraRef.current = camera;
-                        console.log('✅ 相機創建成功，位置:', camera.position, '看向:', [0, 0, -5]);
+                        console.log('✅ 相機創建成功，位置:', camera.position);
                         
                         // 創建渲染器（移動設備優化）
                         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -827,117 +831,118 @@
                         const backgroundStars = new THREE.Points(bgStarGeometry, bgStarMaterial);
                         scene.add(backgroundStars);
                         
-                        // ========== 創建粒子聖誕樹（圓錐形）==========
-                        console.log('🎄 創建粒子聖誕樹...');
+                        // ========== 創建螺旋粒子聖誕樹（使用您提供的數學公式）==========
+                        console.log('🎄 創建螺旋粒子聖誕樹...');
                         
-                        // 創建圓錐形粒子分佈
-                        const treeParticleCount = isMobile ? 800 : 1500;
-                        const treePositions = new Float32Array(treeParticleCount * 3);
-                        const treeColors = new Float32Array(treeParticleCount * 3);
-                        const treeSizes = new Float32Array(treeParticleCount);
-                        const treeIntensities = [];
+                        const particleCount = isMobile ? 5000 : 15000;
+                        const positions = [];
+                        const colors = [];
                         
-                        for (let i = 0; i < treeParticleCount; i++) {
-                            const i3 = i * 3;
+                        // 顏色定義（銀色/白色/粉色系，符合圖片風格）
+                        const color1 = new THREE.Color('#FFB6C1'); // 淺粉色
+                        const color2 = new THREE.Color('#FFD700'); // 金色
+                        const color3 = new THREE.Color('#FFFFFF'); // 白色
+                        const color4 = new THREE.Color('#FF69B4'); // 粉紅色
+                        const color5 = new THREE.Color('#C0C0C0'); // 銀色
+                        
+                        // --- 核心數學邏輯：螺旋圓錐（完全按照您提供的公式）---
+                        for (let i = 0; i < particleCount; i++) {
+                            // y: 高度，從 -5 到 5
+                            const y = (Math.random() - 0.5) * 10;
                             
-                            // 圓錐形分佈（從頂部到底部）
-                            const height = Math.random(); // 0 到 1
-                            const radius = height * 2.5; // 底部更寬
-                            const angle = Math.random() * Math.PI * 2;
+                            // radius: 半徑。高度越高(y越大)，半徑越小。
+                            // 把 y 從 [-5, 5] 映射到 [5, 0] 的半徑範圍
+                            const radius = (5 - y) * 0.4;
                             
-                            // 中心密集，外圍稀疏
-                            const distance = Math.random() < 0.3 ? 
-                                Math.random() * radius * 0.5 : // 中心密集
-                                radius * 0.5 + Math.random() * radius * 0.5; // 外圍稀疏
+                            // angle: 角度。讓粒子旋轉分佈，產生螺旋紋理
+                            const angle = i * 0.2 + y * 5.0; // y * 5.0 產生螺旋效果
                             
-                            treePositions[i3] = Math.cos(angle) * distance;
-                            treePositions[i3 + 1] = height * 4 - 2; // 從 -2 到 2
-                            treePositions[i3 + 2] = Math.sin(angle) * distance;
+                            // 加上一點隨機性，不讓樹太死板
+                            const randomR = radius + (Math.random() - 0.5) * 0.5;
                             
-                            // 顏色漸變：頂部白色，向下漸變到粉紅色/洋紅色
-                            const whiteAmount = 1 - height * 0.6; // 頂部 1.0，底部 0.4
-                            const pinkAmount = height * 0.8;
+                            const x = Math.cos(angle) * randomR;
+                            const z = Math.sin(angle) * randomR;
                             
-                            treeColors[i3] = Math.min(1, whiteAmount + pinkAmount * 0.8); // R
-                            treeColors[i3 + 1] = Math.min(1, whiteAmount + pinkAmount * 0.3); // G
-                            treeColors[i3 + 2] = Math.min(1, whiteAmount + pinkAmount * 1.0); // B
+                            positions.push(x, y, z);
                             
-                            // 大小：頂部較大，底部較小
-                            treeSizes[i] = (0.15 - height * 0.1) * (0.8 + Math.random() * 0.4);
+                            // 顏色分配：頂部白色/銀色，向下漸變到粉色/金色（符合圖片風格）
+                            const heightRatio = (y + 5) / 10; // 0 到 1
+                            const rand = Math.random();
                             
-                            treeIntensities.push({
-                                base: 0.7 + Math.random() * 0.3,
-                                phase: Math.random() * Math.PI * 2,
-                                speed: 1 + Math.random() * 2
-                            });
+                            if (heightRatio > 0.75) {
+                                // 頂部：主要是白色和銀色
+                                if (rand < 0.7) {
+                                    colors.push(color3.r, color3.g, color3.b); // 白色
+                                } else {
+                                    colors.push(color5.r, color5.g, color5.b); // 銀色
+                                }
+                            } else if (heightRatio > 0.5) {
+                                // 中上部：白色和淺粉色混合
+                                if (rand < 0.5) {
+                                    colors.push(color3.r, color3.g, color3.b); // 白色
+                                } else {
+                                    colors.push(color1.r, color1.g, color1.b); // 淺粉色
+                                }
+                            } else if (heightRatio > 0.25) {
+                                // 中下部：粉色為主
+                                if (rand < 0.7) {
+                                    colors.push(color4.r, color4.g, color4.b); // 粉紅色
+                                } else {
+                                    colors.push(color1.r, color1.g, color1.b); // 淺粉色
+                                }
+                            } else {
+                                // 底部：粉色和金色
+                                if (rand < 0.6) {
+                                    colors.push(color4.r, color4.g, color4.b); // 粉紅色
+                                } else {
+                                    colors.push(color2.r, color2.g, color2.b); // 金色
+                                }
+                            }
                         }
                         
                         const treeGeometry = new THREE.BufferGeometry();
-                        treeGeometry.setAttribute('position', new THREE.BufferAttribute(treePositions, 3));
-                        treeGeometry.setAttribute('color', new THREE.BufferAttribute(treeColors, 3));
-                        treeGeometry.setAttribute('size', new THREE.BufferAttribute(treeSizes, 1));
+                        treeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                        treeGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
                         
                         const treeMaterial = new THREE.PointsMaterial({
-                            size: 0.2,
+                            size: 0.15,
                             vertexColors: true,
+                            blending: THREE.AdditiveBlending, // 發光疊加模式（關鍵！）
+                            depthWrite: false,
                             transparent: true,
-                            opacity: 0.95,
-                            sizeAttenuation: true,
-                            blending: THREE.AdditiveBlending // 發光效果
+                            opacity: 0.8,
+                            sizeAttenuation: true
                         });
                         
                         const particleTree = new THREE.Points(treeGeometry, treeMaterial);
                         particleTree.position.set(0, 0, -5);
                         scene.add(particleTree);
-                        console.log('✅ 粒子樹已添加到場景，位置:', particleTree.position);
+                        console.log('✅ 螺旋粒子樹已創建，粒子數:', particleCount);
                         
                         // 頂部發光星星（樹頂）
                         const topStarGeo = new THREE.OctahedronGeometry(0.3, 0);
-                        const topStarMat = new THREE.MeshStandardMaterial({
-                            color: 0xFFB6C1, // 淺粉色
-                            emissive: 0xFFB6C1,
-                            emissiveIntensity: 2.0,
-                            metalness: 0.1,
-                            roughness: 0.1
-                        });
-                        const topStar = new THREE.Mesh(topStarGeo, topStarMat);
-                        topStar.position.set(0, 2.2, -5);
-                        topStar.rotation.z = Math.PI / 4;
-                        
-                        // 星星光暈
-                        const glowGeo = new THREE.SphereGeometry(0.6, 16, 16);
-                        const glowMat = new THREE.MeshBasicMaterial({
+                        const topStarMat = new THREE.MeshBasicMaterial({
                             color: 0xFFB6C1,
                             transparent: true,
-                            opacity: 0.4,
-                            side: THREE.BackSide
+                            opacity: 0.9
                         });
-                        const glow = new THREE.Mesh(glowGeo, glowMat);
-                        topStar.add(glow);
+                        const topStar = new THREE.Mesh(topStarGeo, topStarMat);
+                        topStar.position.set(0, 5.2, -5);
+                        topStar.rotation.z = Math.PI / 4;
                         scene.add(topStar);
-                        console.log('✅ 頂部星星已添加到場景，位置:', topStar.position);
                         
-                        // 底部發光圓環
-                        const createGlowRing = (radius, color, opacity, yPos) => {
-                            const ringGeo = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 32);
-                            const ringMat = new THREE.MeshBasicMaterial({
-                                color: color,
-                                transparent: true,
-                                opacity: opacity,
-                                side: THREE.DoubleSide
-                            });
-                            const ring = new THREE.Mesh(ringGeo, ringMat);
-                            ring.rotation.x = -Math.PI / 2;
-                            ring.position.set(0, yPos, -5);
-                            return ring;
-                        };
-                        
-                        const glowRings = [
-                            createGlowRing(1.5, 0xFF69B4, 0.3, -2.2),
-                            createGlowRing(2.0, 0xFF1493, 0.2, -2.2),
-                            createGlowRing(2.5, 0xFF69B4, 0.15, -2.2)
-                        ];
-                        glowRings.forEach(ring => scene.add(ring));
+                        // 添加底部的光環（完全按照您提供的代碼）
+                        const ringGeo = new THREE.TorusGeometry(2.0, 0.05, 16, 100);
+                        const ringMat = new THREE.MeshBasicMaterial({ 
+                            color: 0xFF69B4,
+                            transparent: true,
+                            opacity: 0.6
+                        });
+                        const ring = new THREE.Mesh(ringGeo, ringMat);
+                        ring.rotation.x = -Math.PI / 2;
+                        ring.position.set(0, -5, -5);
+                        scene.add(ring);
+                        console.log('✅ 底部光環已創建');
                         
                         // ========== 創建 3D 文字 "Merry Christmas!" ==========
                         console.log('📝 創建 3D 文字...');
@@ -1010,17 +1015,13 @@
                         const glowText = createGlowText('Merry Christmas!', 0.6);
                         scene.add(glowText);
                         
-                        // 存儲用於動畫（在創建所有元素後）
+                        // 存儲用於動畫
                         starSystemsRef.current = [{ stars: backgroundStars, geometry: bgStarGeometry }];
                         treeSystemRef.current = { 
                             tree: particleTree, 
-                            geometry: treeGeometry, 
-                            intensities: treeIntensities,
+                            geometry: treeGeometry,
                             topStar: topStar,
-                            glow: glow,
-                            glowRings: glowRings,
-                            textSprite: textSprite,
-                            glowText: glowText
+                            ring: ring
                         };
                         
                         const starSystems = starSystemsRef.current;
@@ -1029,26 +1030,17 @@
                         // ========== 創建光源系統 ==========
                         console.log('💡 創建光源系統...');
                         
-                        // 環境光（深色背景）
-                        const ambientLight = new THREE.AmbientLight(0x000000, 0.2);
+                        // 添加霧氣效果，讓遠處的粒子變暗，更有層次感
+                        scene.fog = new THREE.FogExp2(0x000000, 0.05);
+                        
+                        // 環境光（很暗，主要靠粒子自身發光）
+                        const ambientLight = new THREE.AmbientLight(0x000000, 0.1);
                         scene.add(ambientLight);
                         
-                        // 點光源（照亮粒子樹和文字）
-                        const pointLights = [
-                            { light: new THREE.PointLight(0xFFB6C1, 1.5, 50), pos: [0, 1, -4] }, // 粉紅色（樹中心）
-                            { light: new THREE.PointLight(0xFF69B4, 1.2, 40), pos: [0, 2.5, -5] }, // 洋紅色（樹頂）
-                            { light: new THREE.PointLight(0xFFFFFF, 0.8, 30), pos: [-2, 0, -4] } // 白色（文字）
-                        ];
-                        
-                        pointLights.forEach(lightObj => {
-                            lightObj.light.position.set(...lightObj.pos);
-                            scene.add(lightObj.light);
-                        });
-                        
-                        // 方向光（從上方照亮）
-                        const directionalLight = new THREE.DirectionalLight(0xFFB6C1, 0.5);
-                        directionalLight.position.set(0, 5, 5);
-                        scene.add(directionalLight);
+                        // 點光源（照亮粒子樹）
+                        const pointLight = new THREE.PointLight(0xFFB6C1, 1.0, 50);
+                        pointLight.position.set(0, 0, -4);
+                        scene.add(pointLight);
                     
                         // ========== 動畫循環 ==========
                         console.log('🎬 啟動動畫循環...');
@@ -1061,71 +1053,26 @@
                             // 1. 背景星星緩慢旋轉
                             backgroundStars.rotation.y = elapsedTime * 0.05;
                             
-                            // 2. 粒子樹閃爍和動態效果
-                            if (treeSystem && treeSystem.geometry) {
-                                const treeColors = treeSystem.geometry.attributes.color.array;
-                                treeSystem.intensities.forEach((intensity, i) => {
-                                    const brightness = intensity.base + 
-                                        Math.sin(elapsedTime * intensity.speed + intensity.phase) * 0.3;
-                                    
-                                    const i3 = i * 3;
-                                    const baseR = treeColors[i3];
-                                    const baseG = treeColors[i3 + 1];
-                                    const baseB = treeColors[i3 + 2];
-                                    
-                                    treeColors[i3] = baseR * brightness;
-                                    treeColors[i3 + 1] = baseG * brightness;
-                                    treeColors[i3 + 2] = baseB * brightness;
-                                });
-                                treeSystem.geometry.attributes.color.needsUpdate = true;
-                                
-                                // 粒子樹輕微旋轉和浮動
-                                treeSystem.tree.rotation.y = Math.sin(elapsedTime * 0.2) * 0.1;
-                                treeSystem.tree.position.y = Math.sin(elapsedTime * 0.3) * 0.2;
+                            // 2. 讓整棵樹旋轉（按照您提供的代碼）
+                            if (treeSystem && treeSystem.tree) {
+                                treeSystem.tree.rotation.y = elapsedTime * 0.3;
                             }
                             
-                            // 3. 頂部星星旋轉和閃爍
+                            // 3. 頂部星星旋轉
                             if (treeSystem && treeSystem.topStar) {
-                                treeSystem.topStar.rotation.x = elapsedTime * 0.5;
-                                treeSystem.topStar.rotation.y = elapsedTime * 0.3;
-                                const starIntensity = 1.5 + Math.sin(elapsedTime * 2) * 0.5;
-                                treeSystem.topStar.material.emissiveIntensity = starIntensity;
-                                
-                                // 光暈脈動
-                                if (treeSystem.glow && treeSystem.topStar.children && treeSystem.topStar.children[0]) {
-                                    treeSystem.topStar.children[0].scale.setScalar(1 + Math.sin(elapsedTime * 1.5) * 0.3);
-                                }
+                                treeSystem.topStar.rotation.y = elapsedTime * 0.5;
+                                treeSystem.topStar.rotation.x = elapsedTime * 0.3;
                             }
                             
-                            // 4. 底部圓環動畫
-                            if (treeSystem && treeSystem.glowRings) {
-                                treeSystem.glowRings.forEach((ring, i) => {
-                                    ring.rotation.z = elapsedTime * (0.2 + i * 0.1);
-                                    const scale = 1 + Math.sin(elapsedTime * (1 + i * 0.3) + i) * 0.1;
-                                    ring.scale.set(scale, scale, 1);
-                                });
+                            // 4. 底部光環脈衝式縮放（按照您提供的代碼）
+                            if (treeSystem && treeSystem.ring) {
+                                const scale = 1 + Math.sin(elapsedTime * 2) * 0.1;
+                                treeSystem.ring.scale.set(scale, scale, scale);
                             }
                             
-                            // 5. 文字動畫（輕微浮動和發光）
-                            if (treeSystem && treeSystem.textSprite && treeSystem.glowText) {
-                                treeSystem.textSprite.position.y = Math.sin(elapsedTime * 0.4) * 0.1;
-                                const textOpacity = 0.9 + Math.sin(elapsedTime * 1.5) * 0.05;
-                                treeSystem.textSprite.material.opacity = textOpacity;
-                                
-                                treeSystem.glowText.position.y = treeSystem.textSprite.position.y;
-                                treeSystem.glowText.material.opacity = 0.2 + Math.sin(elapsedTime * 2) * 0.1;
-                            }
-                            
-                            // 6. 光源閃爍
-                            pointLights.forEach((lightObj, i) => {
-                                const baseIntensity = lightObj.light.intensity;
-                                const flicker = Math.sin(elapsedTime * (1.5 + i * 0.3) + i) * 0.2;
-                                lightObj.light.intensity = baseIntensity + flicker;
-                            });
-                            
-                            // 7. 相機輕微移動（創造沉浸感）
-                            camera.position.x = Math.sin(elapsedTime * 0.08) * 0.2;
-                            camera.position.y = Math.cos(elapsedTime * 0.06) * 0.15;
+                            // 5. 相機輕微移動（創造沉浸感）
+                            camera.position.x = Math.sin(elapsedTime * 0.1) * 0.3;
+                            camera.position.y = 5 + Math.cos(elapsedTime * 0.08) * 0.2;
                             camera.lookAt(0, 0, -5);
                             
                             renderer.render(scene, camera);
@@ -1137,7 +1084,7 @@
                             backgroundStars: backgroundStars ? '已創建' : '未創建',
                             particleTree: particleTree ? '已創建' : '未創建',
                             topStar: topStar ? '已創建' : '未創建',
-                            textSprite: textSprite ? '已創建' : '未創建'
+                            ring: ring ? '已創建' : '未創建'
                         });
                         
                         // 立即渲染一次確保可見
@@ -1187,19 +1134,9 @@
                                     if (child.material) child.material.dispose();
                                 });
                             }
-                            if (treeSystem.glowRings) {
-                                treeSystem.glowRings.forEach(ring => {
-                                    if (ring.geometry) ring.geometry.dispose();
-                                    if (ring.material) ring.material.dispose();
-                                });
-                            }
-                            if (treeSystem.textSprite) {
-                                if (treeSystem.textSprite.material.map) treeSystem.textSprite.material.map.dispose();
-                                if (treeSystem.textSprite.material) treeSystem.textSprite.material.dispose();
-                            }
-                            if (treeSystem.glowText) {
-                                if (treeSystem.glowText.material.map) treeSystem.glowText.material.map.dispose();
-                                if (treeSystem.glowText.material) treeSystem.glowText.material.dispose();
+                            if (treeSystem.ring) {
+                                if (treeSystem.ring.geometry) treeSystem.ring.geometry.dispose();
+                                if (treeSystem.ring.material) treeSystem.ring.material.dispose();
                             }
                         }
                         if (rendererRef.current) rendererRef.current.dispose();
@@ -1892,6 +1829,29 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             <FuturisticScene containerRef={chatAreaRef} />
                             {/* 2D 聖誕節背景作為備用（確保總是有背景顯示） */}
                             <ChristmasBackground2D containerRef={chatAreaRef} />
+                        </div>
+                        
+                        {/* "Merry Christmas!" 文字（CSS 動畫效果，按照您提供的代碼） */}
+                        <div id="merry-christmas-text" style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '10%',
+                            transform: 'translateY(-50%)',
+                            color: '#FFB6C1',
+                            fontFamily: "'Brush Script MT', 'Noto Serif TC', cursive",
+                            fontSize: 'clamp(1.5rem, 4vw, 3rem)',
+                            pointerEvents: 'none',
+                            textShadow: '0 0 10px #ff0055, 0 0 20px #ff0055',
+                            zIndex: 5,
+                            mixBlendMode: 'overlay',
+                            opacity: 0.8,
+                            background: 'linear-gradient(to right, #666 0%, #fff 50%, #666 100%)',
+                            backgroundSize: '200% auto',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            animation: 'shine 3s linear infinite'
+                        }}>
+                            Merry Christmas!
                         </div>
                         
                         {/* 訊息內容（在粒子之上） - 確保有正確的 z-index 和定位 */}
