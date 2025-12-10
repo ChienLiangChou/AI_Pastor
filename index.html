@@ -1760,7 +1760,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             <ChristmasBackground2D containerRef={chatAreaRef} />
                         </div>
                         
-                        {/* "Merry Christmas!" 文字（CSS 動畫效果，按照您提供的代碼） */}
+                        {/* "Merry Christmas!!" 文字（CSS 動畫效果，按照您提供的代碼） */}
                         <div id="merry-christmas-text" style={{
                             position: 'absolute',
                             top: '50%',
@@ -1770,17 +1770,19 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             fontFamily: "'Brush Script MT', 'Noto Serif TC', cursive",
                             fontSize: 'clamp(1.5rem, 4vw, 3rem)',
                             pointerEvents: 'none',
-                            textShadow: '0 0 10px #ff0055, 0 0 20px #ff0055',
+                            textShadow: '0 0 10px #ff0055, 0 0 20px #ff0055, 0 0 30px #ff0055',
                             zIndex: 5,
                             mixBlendMode: 'overlay',
-                            opacity: 0.8,
+                            opacity: 0.9,
                             background: 'linear-gradient(to right, #666 0%, #fff 50%, #666 100%)',
                             backgroundSize: '200% auto',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                            animation: 'shine 3s linear infinite'
+                            animation: 'shine 3s linear infinite',
+                            fontWeight: 'normal',
+                            letterSpacing: '0.05em'
                         }}>
-                            Merry Christmas!
+                            Merry Christmas!!
                         </div>
                         
                         {/* 訊息內容（在粒子之上） - 確保有正確的 z-index 和定位 */}
