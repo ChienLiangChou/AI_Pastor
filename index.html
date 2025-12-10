@@ -619,7 +619,7 @@
                     ctx.shadowColor = '#FFB6C1';
                     const textX = width * 0.1;
                     const textY = height * 0.5;
-                    ctx.fillText('Merry Christmas!', textX, textY);
+                    ctx.fillText('Merry Christmas!!', textX, textY);
                     ctx.restore();
                     
                     // 更新和繪製雪花
@@ -1760,27 +1760,30 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             <ChristmasBackground2D containerRef={chatAreaRef} />
                         </div>
                         
-                        {/* "Merry Christmas!!" 文字（CSS 動畫效果，按照您提供的代碼） */}
+                        {/* "Merry Christmas!!" 文字（CSS 動畫效果，確保可見） */}
                         <div id="merry-christmas-text" style={{
                             position: 'absolute',
                             top: '50%',
-                            left: '10%',
+                            left: '5%',
                             transform: 'translateY(-50%)',
                             color: '#FFB6C1',
                             fontFamily: "'Brush Script MT', 'Noto Serif TC', cursive",
-                            fontSize: 'clamp(1.5rem, 4vw, 3rem)',
+                            fontSize: 'clamp(2rem, 5vw, 4rem)',
                             pointerEvents: 'none',
-                            textShadow: '0 0 10px #ff0055, 0 0 20px #ff0055, 0 0 30px #ff0055',
-                            zIndex: 5,
-                            mixBlendMode: 'overlay',
-                            opacity: 0.9,
-                            background: 'linear-gradient(to right, #666 0%, #fff 50%, #666 100%)',
+                            textShadow: '0 0 15px #ff0055, 0 0 30px #ff0055, 0 0 45px #ff0055, 0 0 60px rgba(255, 0, 85, 0.5)',
+                            zIndex: 100,
+                            opacity: 1,
+                            fontWeight: 'normal',
+                            letterSpacing: '0.1em',
+                            whiteSpace: 'nowrap',
+                            background: 'linear-gradient(90deg, #666 0%, #fff 50%, #666 100%)',
                             backgroundSize: '200% auto',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
                             animation: 'shine 3s linear infinite',
-                            fontWeight: 'normal',
-                            letterSpacing: '0.05em'
+                            filter: 'drop-shadow(0 0 10px rgba(255, 182, 193, 0.8))',
+                            mixBlendMode: 'screen'
                         }}>
                             Merry Christmas!!
                         </div>
