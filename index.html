@@ -537,6 +537,8 @@
             const rendererRef = useRef(null);
             const cameraRef = useRef(null);
             const animationIdRef = useRef(null);
+            const starSystemsRef = useRef(null);
+            const treeSystemRef = useRef(null);
             const [error, setError] = useState(null);
             const [threeLoaded, setThreeLoaded] = useState(false);
             
@@ -869,8 +871,8 @@
                         scene.add(glowText);
                         
                         // 存儲用於動畫（在創建所有元素後）
-                        const starSystems = [{ stars: backgroundStars, geometry: bgStarGeometry }];
-                        const treeSystem = { 
+                        starSystemsRef.current = [{ stars: backgroundStars, geometry: bgStarGeometry }];
+                        treeSystemRef.current = { 
                             tree: particleTree, 
                             geometry: treeGeometry, 
                             intensities: treeIntensities,
@@ -880,6 +882,9 @@
                             textSprite: textSprite,
                             glowText: glowText
                         };
+                        
+                        const starSystems = starSystemsRef.current;
+                        const treeSystem = treeSystemRef.current;
                     
                         // ========== 創建光源系統 ==========
                         console.log('💡 創建光源系統...');
@@ -987,11 +992,22 @@
                         };
                         animate();
                         console.log('✅ 場景初始化完成！動畫循環已啟動');
+                        console.log('📊 場景統計:', {
+                            objects: scene.children.length,
+                            backgroundStars: backgroundStars ? '已創建' : '未創建',
+                            particleTree: particleTree ? '已創建' : '未創建',
+                            topStar: topStar ? '已創建' : '未創建',
+                            textSprite: textSprite ? '已創建' : '未創建'
+                        });
                         
                         // 立即渲染一次確保可見
                         setTimeout(() => {
-                            renderer.render(scene, camera);
-                            console.log('✅ 初始渲染完成');
+                            if (renderer && scene && camera) {
+                                renderer.render(scene, camera);
+                                console.log('✅ 初始渲染完成');
+                            } else {
+                                console.error('❌ 渲染器、場景或相機不存在');
+                            }
                         }, 100);
                     
                     // 處理窗口大小變化
@@ -1015,11 +1031,14 @@
                         }
                         window.removeEventListener('resize', handleResize);
                         // 清理所有資源
-                        starSystems.forEach(system => {
-                            if (system.geometry) system.geometry.dispose();
-                            if (system.material) system.material.dispose();
-                        });
-                        if (treeSystem) {
+                        if (starSystemsRef.current) {
+                            starSystemsRef.current.forEach(system => {
+                                if (system.geometry) system.geometry.dispose();
+                                if (system.material) system.material.dispose();
+                            });
+                        }
+                        if (treeSystemRef.current) {
+                            const treeSystem = treeSystemRef.current;
                             if (treeSystem.geometry) treeSystem.geometry.dispose();
                             if (treeMaterial) treeMaterial.dispose();
                             if (treeSystem.topStar) {
@@ -1043,9 +1062,7 @@
                                 if (treeSystem.glowText.material) treeSystem.glowText.material.dispose();
                             }
                         }
-                        if (bgStarGeometry) bgStarGeometry.dispose();
-                        if (bgStarMaterial) bgStarMaterial.dispose();
-                        if (renderer) renderer.dispose();
+                        if (rendererRef.current) rendererRef.current.dispose();
                     };
                     } catch (err) {
                         console.error('❌ 3D 場景初始化錯誤:', err);
