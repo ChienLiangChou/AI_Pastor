@@ -1696,6 +1696,43 @@ If the user asks about topics outside your pastoral role, you MUST:
             const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
             const [authForm, setAuthForm] = useState({ email: '', username: '', password: '', nickname: '' });
 
+            // 處理瀏覽器返回按鈕 - 允許返回歡迎選擇界面
+            useEffect(() => {
+                // 當顯示歡迎界面時，確保有歷史記錄
+                if (showWelcomeModal) {
+                    if (!window.history.state || window.history.state.step !== 'welcome') {
+                        window.history.replaceState({ step: 'welcome' }, '', window.location.href);
+                    }
+                }
+            }, [showWelcomeModal]);
+
+            // 監聽瀏覽器返回按鈕
+            useEffect(() => {
+                const handlePopState = (event) => {
+                    // 當用戶按返回按鈕時
+                    if (event.state) {
+                        if (event.state.step === 'welcome') {
+                            // 返回歡迎界面（允許重新選擇模式）
+                            setShowWelcomeModal(true);
+                            setShowAuthModal(false);
+                        } else if (event.state.step === 'auth') {
+                            // 返回註冊/登入界面
+                            setShowAuthModal(true);
+                            setShowWelcomeModal(false);
+                        }
+                    } else {
+                        // 如果沒有 state（首次載入），且還沒看過歡迎界面，顯示歡迎界面
+                        if (!userState.hasSeenWelcome) {
+                            setShowWelcomeModal(true);
+                            setShowAuthModal(false);
+                        }
+                    }
+                };
+
+                window.addEventListener('popstate', handlePopState);
+                return () => window.removeEventListener('popstate', handlePopState);
+            }, [userState.hasSeenWelcome]);
+
             // 從 localStorage 載入歷史對話
             const loadHistory = () => {
                 try {
@@ -1812,10 +1849,25 @@ If the user asks about topics outside your pastoral role, you MUST:
                     setUserState(newState);
                     saveUserState(newState);
                     setShowWelcomeModal(false);
+                    // 添加歷史記錄，允許返回
+                    window.history.pushState({ step: 'main', choice: 'guest' }, '', window.location.href);
                 } else if (choice === 'register') {
                     setShowWelcomeModal(false);
                     setShowAuthModal(true);
                     setAuthMode('register');
+                    // 添加歷史記錄，允許返回
+                    window.history.pushState({ step: 'auth', choice: 'register' }, '', window.location.href);
+                }
+            };
+
+            // 處理註冊/登入 Modal 關閉按鈕 - 返回歡迎界面
+            const handleCloseAuthModal = () => {
+                setShowAuthModal(false);
+                // 如果是在註冊流程中關閉，返回歡迎界面
+                if (window.history.state && window.history.state.step === 'auth') {
+                    setShowWelcomeModal(true);
+                    // 更新歷史記錄
+                    window.history.pushState({ step: 'welcome' }, '', window.location.href);
                 }
             };
 
@@ -2028,7 +2080,7 @@ If the user asks about topics outside your pastoral role, you MUST:
 
                     {/* 註冊/登入 Modal */}
                     {showAuthModal && (
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowAuthModal(false)}>
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={handleCloseAuthModal}>
                             <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
                                 <div className="p-6 sm:p-8">
                                     <div className="flex items-center justify-between mb-6">
@@ -2036,7 +2088,7 @@ If the user asks about topics outside your pastoral role, you MUST:
                                             {authMode === 'register' ? '註冊帳號' : '登入帳號'}
                                         </h2>
                                         <button
-                                            onClick={() => setShowAuthModal(false)}
+                                            onClick={handleCloseAuthModal}
                                             className="text-amber-200/70 hover:text-amber-100 transition-colors"
                                         >
                                             <Icon name="x" size={24} />
