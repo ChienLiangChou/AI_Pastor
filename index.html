@@ -609,7 +609,7 @@
                         ctx.restore();
                     }
                     
-                    // 繪製 "Merry Christmas!" 文字
+                    // 繪製 " Merry Christmas" 文字
                     ctx.save();
                     ctx.fillStyle = '#FFB6C1';
                     ctx.font = `italic ${Math.min(24, width * 0.06)}px 'Noto Serif TC', serif`;
@@ -619,7 +619,7 @@
                     ctx.shadowColor = '#FFB6C1';
                     const textX = width * 0.1;
                     const textY = height * 0.5;
-                    ctx.fillText('Merry Christmas!!', textX, textY);
+                    ctx.fillText(' Merry Christmas', textX, textY);
                     ctx.restore();
                     
                     // 更新和繪製雪花
@@ -1345,15 +1345,42 @@
 
         const SYSTEM_PROMPT_BIBLE_ONLY = `
 You are a wise, loving, and learned Christian AI Pastor.
-Your task is to provide spiritual guidance and answers based on the user's questions.
+Your identity and role are CRITICAL: You are a Christian pastor, and you MUST maintain this identity in ALL conversations.
 
-**IMPORTANT: You can answer ANY type of question, including:**
-- Personal life problems (relationships, work, family, finances, health, etc.)
+**YOUR IDENTITY AS A PASTOR:**
+- You are a Christian pastor providing spiritual guidance
+- You speak from a pastoral perspective, using biblical wisdom
+- You care for the spiritual well-being of your congregation (the user)
+- You are NOT a general AI assistant, therapist, lawyer, doctor, or financial advisor
+- You MUST stay within the boundaries of pastoral care
+
+**TOPICS YOU CAN DISCUSS (Within Pastoral Role):**
 - Spiritual questions and biblical interpretation
-- Ethical dilemmas and moral questions
-- Life decisions and guidance
-- Emotional struggles and challenges
-- Any question where the user seeks biblical wisdom
+- Prayer, Bible reading, and spiritual disciplines
+- Faith-related life decisions and guidance
+- Personal life problems from a SPIRITUAL/BIBLICAL perspective (relationships, work, family, finances, health - but only as they relate to faith and biblical principles)
+- Ethical dilemmas and moral questions from a biblical perspective
+- Emotional struggles and challenges from a SPIRITUAL perspective
+- Church life, ministry, and service
+- Questions about God, Jesus, the Holy Spirit, salvation, and Christian doctrine
+- How to apply biblical principles to daily life
+
+**TOPICS OUTSIDE YOUR PASTORAL ROLE (MUST REDIRECT):**
+- Severe mental health issues requiring professional therapy (depression, anxiety disorders, PTSD, etc.)
+- Legal advice or legal problems (need a lawyer)
+- Medical diagnosis, treatment recommendations, or health emergencies (need a doctor)
+- Complex marital/family crises requiring professional counseling (need professional family counselor)
+- Financial investment advice or detailed financial planning (need a financial advisor)
+- Technical career advice unrelated to faith (need a career counselor)
+- Purely secular topics with no spiritual dimension
+- Any situation requiring immediate professional intervention (crisis, abuse, etc.)
+
+**CRITICAL: When Topics Are Outside Your Role:**
+If the user asks about topics outside your pastoral role, you MUST:
+1. Gently but clearly remind them: "作為你的牧師，我理解你的困擾，但這個問題超出了我作為牧師能夠提供的幫助範圍。" (Chinese) or "As your pastor, I understand your concern, but this matter is beyond what I can help with in my pastoral role." (English)
+2. Explain why: "這類問題需要專業的 [專業類型] 來協助，而不是牧師的職責範圍。" (Chinese) or "This type of issue requires a professional [professional type], which is outside a pastor's role." (English)
+3. Direct them appropriately: "我建議你去找教會的牧師，他們可以為你提供更深入的屬靈輔導，並幫助你找到合適的專業資源。如果你還沒有固定的教會，我鼓勵你尋找一間教會，建立真實的屬靈關係。" (Chinese) or "I recommend you speak with your church pastor, who can provide deeper spiritual guidance and help you find appropriate professional resources. If you don't have a church, I encourage you to find one and build real spiritual relationships." (English)
+4. Still offer what you CAN do: "不過，我可以為你禱告，並從聖經的角度分享一些屬靈的原則。" (Chinese) or "However, I can pray for you and share some spiritual principles from the Bible." (English)
 
 **Strict Rules:**
 
@@ -1384,19 +1411,51 @@ Your task is to provide spiritual guidance and answers based on the user's quest
    - DO NOT mix languages. DO NOT translate the user's question to another language. Use the EXACT language the user used.
 
 6. **Version:** Default to CUV (Chinese Union Version) wording for Chinese responses.
+
+7. **Pastoral Identity Reminder:** Always remember you are a PASTOR, not a general assistant. If the conversation drifts into non-spiritual topics, gently redirect back to your pastoral role.
+
+8. **Disclaimer:** Always end your response with the disclaimer about seeking help from a real pastor at church. Use the same language as the user's question. For Chinese: "**重要提醒：** 如果您真的需要幫助，請務必前往教會尋找能夠幫助您的牧師。AI 牧師無法替代真實的人際關係和專業的屬靈輔導。" For English: "**Important Reminder:** If you really need help, please go to a church and find a pastor who can help you. AI Pastor cannot replace real relationships and professional spiritual counseling."
 `;
 
         const SYSTEM_PROMPT_WEB_SEARCH = `
 You are a wise, up-to-date Christian AI Pastor.
-Your task is to answer the user's questions, combining biblical truth with broad knowledge.
+Your identity and role are CRITICAL: You are a Christian pastor, and you MUST maintain this identity in ALL conversations.
 
-**IMPORTANT: You can answer ANY type of question, including:**
-- Personal life problems (relationships, work, family, finances, health, etc.)
+**YOUR IDENTITY AS A PASTOR:**
+- You are a Christian pastor providing spiritual guidance
+- You speak from a pastoral perspective, using biblical wisdom combined with resources
+- You care for the spiritual well-being of your congregation (the user)
+- You are NOT a general AI assistant, therapist, lawyer, doctor, or financial advisor
+- You MUST stay within the boundaries of pastoral care
+
+**TOPICS YOU CAN DISCUSS (Within Pastoral Role):**
 - Spiritual questions and biblical interpretation
-- Ethical dilemmas and moral questions
-- Life decisions and guidance
-- Emotional struggles and challenges
-- Any question where the user seeks biblical wisdom combined with practical resources
+- Prayer, Bible reading, and spiritual disciplines
+- Faith-related life decisions and guidance
+- Personal life problems from a SPIRITUAL/BIBLICAL perspective (relationships, work, family, finances, health - but only as they relate to faith and biblical principles)
+- Ethical dilemmas and moral questions from a biblical perspective
+- Emotional struggles and challenges from a SPIRITUAL perspective
+- Church life, ministry, and service
+- Questions about God, Jesus, the Holy Spirit, salvation, and Christian doctrine
+- How to apply biblical principles to daily life
+- Historical background, theological insights, and Christian resources related to faith
+
+**TOPICS OUTSIDE YOUR PASTORAL ROLE (MUST REDIRECT):**
+- Severe mental health issues requiring professional therapy (depression, anxiety disorders, PTSD, etc.)
+- Legal advice or legal problems (need a lawyer)
+- Medical diagnosis, treatment recommendations, or health emergencies (need a doctor)
+- Complex marital/family crises requiring professional counseling (need professional family counselor)
+- Financial investment advice or detailed financial planning (need a financial advisor)
+- Technical career advice unrelated to faith (need a career counselor)
+- Purely secular topics with no spiritual dimension
+- Any situation requiring immediate professional intervention (crisis, abuse, etc.)
+
+**CRITICAL: When Topics Are Outside Your Role:**
+If the user asks about topics outside your pastoral role, you MUST:
+1. Gently but clearly remind them: "作為你的牧師，我理解你的困擾，但這個問題超出了我作為牧師能夠提供的幫助範圍。" (Chinese) or "As your pastor, I understand your concern, but this matter is beyond what I can help with in my pastoral role." (English)
+2. Explain why: "這類問題需要專業的 [專業類型] 來協助，而不是牧師的職責範圍。" (Chinese) or "This type of issue requires a professional [professional type], which is outside a pastor's role." (English)
+3. Direct them appropriately: "我建議你去找教會的牧師，他們可以為你提供更深入的屬靈輔導，並幫助你找到合適的專業資源。如果你還沒有固定的教會，我鼓勵你尋找一間教會，建立真實的屬靈關係。" (Chinese) or "I recommend you speak with your church pastor, who can provide deeper spiritual guidance and help you find appropriate professional resources. If you don't have a church, I encourage you to find one and build real spiritual relationships." (English)
+4. Still offer what you CAN do: "不過，我可以為你禱告，並從聖經的角度分享一些屬靈的原則。" (Chinese) or "However, I can pray for you and share some spiritual principles from the Bible." (English)
 
 **Rules:**
 
@@ -1428,6 +1487,10 @@ Your task is to answer the user's questions, combining biblical truth with broad
    - If the user asks in any other language, you MUST respond in that same language.
    - DO NOT mix languages. DO NOT translate the user's question to another language. Use the EXACT language the user used.
    - All citations, explanations, and disclaimers MUST be in the same language as the user's question.
+
+7. **Pastoral Identity Reminder:** Always remember you are a PASTOR, not a general assistant. If the conversation drifts into non-spiritual topics, gently redirect back to your pastoral role.
+
+8. **Disclaimer:** Always end your response with the disclaimer about seeking help from a real pastor at church. Use the same language as the user's question. For Chinese: "**重要提醒：** 如果您真的需要幫助，請務必前往教會尋找能夠幫助您的牧師。AI 牧師無法替代真實的人際關係和專業的屬靈輔導。" For English: "**Important Reminder:** If you really need help, please go to a church and find a pastor who can help you. AI Pastor cannot replace real relationships and professional spiritual counseling."
 `;
 
         const callGeminiAPI = async (prompt, history, mode) => {
@@ -1606,14 +1669,42 @@ Your task is to answer the user's questions, combining biblical truth with broad
         };
 
         const App = () => {
+            // 用戶狀態管理
+            const loadUserState = () => {
+                try {
+                    const saved = localStorage.getItem('ai-pastor-user-state');
+                    if (saved) {
+                        return JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.warn('無法載入用戶狀態', e);
+                }
+                return { mode: 'guest', hasSeenWelcome: false };
+            };
+
+            const saveUserState = (state) => {
+                try {
+                    localStorage.setItem('ai-pastor-user-state', JSON.stringify(state));
+                } catch (e) {
+                    console.warn('無法保存用戶狀態', e);
+                }
+            };
+
+            const [userState, setUserState] = useState(loadUserState);
+            const [showWelcomeModal, setShowWelcomeModal] = useState(!userState.hasSeenWelcome);
+            const [showAuthModal, setShowAuthModal] = useState(false);
+            const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+            const [authForm, setAuthForm] = useState({ email: '', username: '', password: '', nickname: '' });
+
             // 從 localStorage 載入歷史對話
             const loadHistory = () => {
                 try {
                     const saved = localStorage.getItem('ai-pastor-history');
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        // 只保留最近 20 條訊息以避免過大
-                        return parsed.slice(-20);
+                        // 訪客模式：只保留最近 20 條訊息以避免過大
+                        // 註冊模式：保留所有訊息（未來從後端載入）
+                        return userState.mode === 'guest' ? parsed.slice(-20) : parsed;
                     }
                 } catch (e) {
                     console.warn('無法載入歷史記錄', e);
@@ -1630,6 +1721,11 @@ Your task is to answer the user's questions, combining biblical truth with broad
             const messagesEndRef = useRef(null);
             const chatAreaRef = useRef(null);
 
+            // 當用戶狀態改變時重新載入歷史
+            useEffect(() => {
+                setMessages(loadHistory());
+            }, [userState.mode]);
+
             useEffect(() => {
                 lucide.createIcons();
             }, []);
@@ -1639,14 +1735,39 @@ Your task is to answer the user's questions, combining biblical truth with broad
                 lucide.createIcons();
             }, [messages, isLoading]);
 
-            // 保存對話歷史到 localStorage
+            // 保存對話歷史
             useEffect(() => {
+                // 總是保存到 localStorage 作為備份
                 try {
                     localStorage.setItem('ai-pastor-history', JSON.stringify(messages));
                 } catch (e) {
-                    console.warn('無法保存歷史記錄', e);
+                    console.warn('無法保存歷史記錄到本地', e);
                 }
-            }, [messages]);
+
+                // 如果是註冊用戶，同時保存到後端
+                if (userState.mode === 'registered' && userState.user?.token && messages.length > 0) {
+                    saveHistoryToBackend(userState.user.token, messages);
+                }
+            }, [messages, userState.mode, userState.user?.token]);
+
+            // 保存對話歷史到後端
+            const saveHistoryToBackend = async (token, messages) => {
+                try {
+                    const apiUrl = API_BASE_URL ? `${API_BASE_URL}/api/user` : '/api/user';
+                    await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token,
+                            type: 'messages',
+                            data: { messages }
+                        })
+                    });
+                } catch (error) {
+                    console.error('保存到後端失敗:', error);
+                    // 失敗時不影響用戶體驗，因為已經保存到 localStorage
+                }
+            };
 
             const handleSend = async (e) => {
                 if (e && e.preventDefault) {
@@ -1684,8 +1805,317 @@ Your task is to answer the user's questions, combining biblical truth with broad
                 }
             };
 
+            // 處理歡迎界面選擇
+            const handleWelcomeChoice = (choice) => {
+                if (choice === 'guest') {
+                    const newState = { ...userState, hasSeenWelcome: true, mode: 'guest' };
+                    setUserState(newState);
+                    saveUserState(newState);
+                    setShowWelcomeModal(false);
+                } else if (choice === 'register') {
+                    setShowWelcomeModal(false);
+                    setShowAuthModal(true);
+                    setAuthMode('register');
+                }
+            };
+
+            // 處理註冊/登入
+            const handleAuth = async (e) => {
+                if (e) e.preventDefault();
+                setIsLoading(true);
+
+                try {
+                    const apiUrl = API_BASE_URL ? `${API_BASE_URL}/api/auth` : '/api/auth';
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: authMode === 'register' ? 'register' : 'login',
+                            email: authForm.email,
+                            username: authForm.username,
+                            password: authForm.password,
+                            nickname: authForm.nickname
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || '認證失敗');
+                    }
+
+                    // 認證成功
+                    const newState = {
+                        ...userState,
+                        hasSeenWelcome: true,
+                        mode: 'registered',
+                        user: {
+                            email: data.user.email,
+                            username: data.user.username,
+                            nickname: data.user.nickname,
+                            token: data.token
+                        }
+                    };
+                    setUserState(newState);
+                    saveUserState(newState);
+                    setShowAuthModal(false);
+                    setAuthForm({ email: '', username: '', password: '', nickname: '' });
+
+                    // 遷移 localStorage 數據到後端
+                    if (authMode === 'register') {
+                        await migrateLocalDataToBackend(data.token);
+                        alert('註冊成功！您的對話記錄已同步到雲端。');
+                    } else {
+                        // 登入時從後端載入歷史
+                        await loadHistoryFromBackend(data.token);
+                        alert('登入成功！');
+                    }
+                } catch (error) {
+                    console.error('認證錯誤:', error);
+                    alert(`認證失敗：${error.message}`);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            // 遷移 localStorage 數據到後端
+            const migrateLocalDataToBackend = async (token) => {
+                try {
+                    const localMessages = localStorage.getItem('ai-pastor-history');
+                    if (!localMessages) return;
+
+                    const messages = JSON.parse(localMessages);
+                    if (!Array.isArray(messages) || messages.length === 0) return;
+
+                    const apiUrl = API_BASE_URL ? `${API_BASE_URL}/api/user` : '/api/user';
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token,
+                            type: 'migrate',
+                            data: { messages }
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        console.log(`成功遷移 ${data.migratedCount} 條對話記錄`);
+                    }
+                } catch (error) {
+                    console.error('數據遷移失敗:', error);
+                }
+            };
+
+            // 從後端載入歷史
+            const loadHistoryFromBackend = async (token) => {
+                try {
+                    const apiUrl = API_BASE_URL ? `${API_BASE_URL}/api/user?token=${encodeURIComponent(token)}&type=messages` : `/api/user?token=${encodeURIComponent(token)}&type=messages`;
+                    const response = await fetch(apiUrl);
+
+                    if (!response.ok) {
+                        throw new Error('無法載入歷史記錄');
+                    }
+
+                    const data = await response.json();
+                    if (data.success && data.messages && data.messages.length > 0) {
+                        setMessages(data.messages);
+                        // 同時更新 localStorage 作為備份
+                        localStorage.setItem('ai-pastor-history', JSON.stringify(data.messages));
+                    }
+                } catch (error) {
+                    console.error('載入歷史失敗:', error);
+                }
+            };
+
+            // 處理登出
+            const handleLogout = () => {
+                if (window.confirm('確定要登出嗎？您的對話記錄將保留在雲端，但本地將切換為訪客模式。')) {
+                    const newState = { mode: 'guest', hasSeenWelcome: true };
+                    setUserState(newState);
+                    saveUserState(newState);
+                }
+            };
+
             return (
                 <div className="flex flex-col h-screen w-full max-w-4xl mx-auto shadow-2xl bg-gradient-to-b from-slate-900/95 via-slate-800/90 to-slate-900/95 overflow-hidden backdrop-blur-xl" style={{ width: '100%', maxWidth: '100%', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
+                    {/* 歡迎選擇 Modal */}
+                    {showWelcomeModal && (
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => {}}>
+                            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                                <div className="p-6 sm:p-8">
+                                    <div className="text-center mb-6">
+                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 mb-4 shadow-lg">
+                                            <Icon name="cross" size={32} className="text-white" />
+                                        </div>
+                                        <h2 className="text-2xl sm:text-3xl font-bold text-amber-50 mb-2 font-serif">歡迎使用 AI 牧師</h2>
+                                        <p className="text-amber-200/80 text-sm sm:text-base">選擇您的使用方式</p>
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                        {/* 訪客模式卡片 */}
+                                        <div className="bg-slate-700/50 rounded-xl p-6 border-2 border-slate-600/50 hover:border-amber-500/50 transition-all">
+                                            <div className="flex items-center mb-4">
+                                                <Icon name="user" size={24} className="text-amber-400 mr-3" />
+                                                <h3 className="text-xl font-bold text-amber-50">訪客模式</h3>
+                                            </div>
+                                            <ul className="space-y-2 text-sm text-amber-200/70 mb-4">
+                                                <li className="flex items-start">
+                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>立即使用，無需註冊</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>資料僅儲存在您的裝置</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <Icon name="x" size={16} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>僅限單一裝置使用</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <Icon name="x" size={16} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>最多保留最近 20 條對話</span>
+                                                </li>
+                                            </ul>
+                                            <button
+                                                onClick={() => handleWelcomeChoice('guest')}
+                                                className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95"
+                                            >
+                                                立即開始（訪客模式）
+                                            </button>
+                                        </div>
+
+                                        {/* 註冊模式卡片 */}
+                                        <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 rounded-xl p-6 border-2 border-amber-500/50 hover:border-amber-400/70 transition-all">
+                                            <div className="flex items-center mb-4">
+                                                <Icon name="user-plus" size={24} className="text-amber-300 mr-3" />
+                                                <h3 className="text-xl font-bold text-amber-50">註冊帳號</h3>
+                                            </div>
+                                            <ul className="space-y-2 text-sm text-amber-200/70 mb-4">
+                                                <li className="flex items-start">
+                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>完整對話歷史儲存</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>多裝置同步</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>個人化記憶系統</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                    <span>屬靈成長追蹤</span>
+                                                </li>
+                                            </ul>
+                                            <button
+                                                onClick={() => handleWelcomeChoice('register')}
+                                                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95"
+                                            >
+                                                註冊帳號（免費）
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-center text-xs text-amber-300/60">
+                                        <p>您可以隨時在設定中切換模式或升級帳號</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 註冊/登入 Modal */}
+                    {showAuthModal && (
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowAuthModal(false)}>
+                            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                                <div className="p-6 sm:p-8">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-amber-50 font-serif">
+                                            {authMode === 'register' ? '註冊帳號' : '登入帳號'}
+                                        </h2>
+                                        <button
+                                            onClick={() => setShowAuthModal(false)}
+                                            className="text-amber-200/70 hover:text-amber-100 transition-colors"
+                                        >
+                                            <Icon name="x" size={24} />
+                                        </button>
+                                    </div>
+
+                                    <form onSubmit={handleAuth} className="space-y-4">
+                                        {authMode === 'register' && (
+                                            <>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-amber-200/80 mb-2">使用者名稱</label>
+                                                    <input
+                                                        type="text"
+                                                        value={authForm.username}
+                                                        onChange={(e) => setAuthForm({...authForm, username: e.target.value})}
+                                                        className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-4 py-2.5 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                                                        placeholder="請輸入使用者名稱"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-amber-200/80 mb-2">暱稱（選填）</label>
+                                                    <input
+                                                        type="text"
+                                                        value={authForm.nickname}
+                                                        onChange={(e) => setAuthForm({...authForm, nickname: e.target.value})}
+                                                        className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-4 py-2.5 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                                                        placeholder="AI 牧師如何稱呼您？"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
+                                        <div>
+                                            <label className="block text-sm font-medium text-amber-200/80 mb-2">Email</label>
+                                            <input
+                                                type="email"
+                                                value={authForm.email}
+                                                onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
+                                                className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-4 py-2.5 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                                                placeholder="your@email.com"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-amber-200/80 mb-2">密碼</label>
+                                            <input
+                                                type="password"
+                                                value={authForm.password}
+                                                onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
+                                                className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-4 py-2.5 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                                                placeholder="請輸入密碼"
+                                                required
+                                                minLength={6}
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95"
+                                        >
+                                            {authMode === 'register' ? '註冊' : '登入'}
+                                        </button>
+                                    </form>
+
+                                    <div className="mt-4 text-center">
+                                        <button
+                                            onClick={() => {
+                                                setAuthMode(authMode === 'register' ? 'login' : 'register');
+                                                setAuthForm({ email: '', username: '', password: '', nickname: '' });
+                                            }}
+                                            className="text-sm text-amber-300/70 hover:text-amber-200 transition-colors"
+                                        >
+                                            {authMode === 'register' ? '已有帳號？點此登入' : '還沒有帳號？點此註冊'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Header - 3D 未來感設計 */}
                     <header className="bg-gradient-to-r from-slate-900/95 via-slate-800/90 to-slate-900/95 text-amber-50 px-2 sm:px-4 py-0.5 sm:py-1.5 shadow-lg shadow-amber-900/30 flex items-center justify-between z-10 shrink-0 border-b border-amber-500/30 futuristic-border" style={{ height: '38px', minHeight: '38px', maxHeight: '38px', backdropFilter: 'blur(10px)' }}>
                         <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
@@ -1698,7 +2128,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             </div>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                            <span className="text-[10px] sm:text-xs text-amber-200/70 whitespace-nowrap">按這裡清除所有對話紀錄</span>
+                            <span className="text-[10px] sm:text-xs text-amber-200/70 whitespace-nowrap hidden sm:inline">按這裡清除所有對話紀錄</span>
                             <button
                                 onClick={clearHistory}
                                 className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-all duration-200 px-1 sm:px-1.5 py-0.5 rounded-lg hover:bg-amber-800/40 active:bg-amber-800/60 active:scale-95 shrink-0 hover:shadow-md"
@@ -1706,7 +2136,29 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             >
                                 <Icon name="trash-2" size={12} className="sm:w-3.5 sm:h-3.5" />
                             </button>
-                            <div className="text-xs text-slate-400/80 hidden sm:block">訪客模式</div>
+                            {userState.mode === 'guest' ? (
+                                <button
+                                    onClick={() => setShowAuthModal(true)}
+                                    className="text-xs sm:text-sm text-amber-300/80 hover:text-amber-200 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-amber-800/40 active:bg-amber-800/60 active:scale-95 shrink-0 hover:shadow-md flex items-center gap-1"
+                                    title="升級為註冊帳號"
+                                >
+                                    <Icon name="user-plus" size={12} className="sm:w-3.5 sm:h-3.5" />
+                                    <span className="hidden sm:inline">訪客模式</span>
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <div className="text-xs text-amber-200/80 hidden sm:block">
+                                        {userState.user?.nickname || userState.user?.username || '已登入'}
+                                    </div>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-all duration-200 px-1 sm:px-1.5 py-0.5 rounded-lg hover:bg-amber-800/40 active:bg-amber-800/60 active:scale-95 shrink-0 hover:shadow-md"
+                                        title="登出"
+                                    >
+                                        <Icon name="log-out" size={12} className="sm:w-3.5 sm:h-3.5" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </header>
 
@@ -1760,7 +2212,7 @@ Your task is to answer the user's questions, combining biblical truth with broad
                             <ChristmasBackground2D containerRef={chatAreaRef} />
                         </div>
                         
-                        {/* "Merry Christmas!!" 文字（CSS 動畫效果，確保可見） */}
+                        {/* " Merry Christmas" 文字（CSS 動畫效果，確保可見） */}
                         <div id="merry-christmas-text" style={{
                             position: 'absolute',
                             top: '50%',
