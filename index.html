@@ -322,7 +322,7 @@
         // 使用後端代理 API（API Key 安全保護在伺服器端）
         // 在 Vercel 上，使用相對路徑自動指向同域的 API
         // 本地開發時，可以設定 API_BASE_URL 指向本地伺服器
-        const API_BASE_URL = window.API_BASE_URL || ''; // 例如: 'http://localhost:3000' 或留空使用相對路徑（Vercel）
+        const API_BASE_URL = window.API_BASE_URL || 'https://ai-pastor-ealr.onrender.com'; // Render 後端 URL
         const GOOGLE_API_KEY = window.GOOGLE_API_KEY || null; // 僅用於本地開發，不建議公開使用
 
         // =========================================================================
