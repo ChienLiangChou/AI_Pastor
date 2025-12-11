@@ -340,6 +340,52 @@ app.post('/api/user', async (req, res) => {
     }
 });
 
+// 管理端點：查看所有註冊用戶（需要管理員密碼保護）
+app.get('/api/admin/users', async (req, res) => {
+    // 簡單的密碼保護（生產環境應使用更安全的方式）
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const providedPassword = req.query.password || req.headers['x-admin-password'];
+    
+    if (providedPassword !== adminPassword) {
+        return res.status(401).json({ error: 'Unauthorized: Admin password required' });
+    }
+    
+    // 返回所有用戶（不包含密碼）
+    const usersList = Array.from(users.values()).map(user => ({
+        email: user.email,
+        username: user.username,
+        nickname: user.nickname,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+    }));
+    
+    res.json({
+        success: true,
+        totalUsers: usersList.length,
+        users: usersList
+    });
+});
+
+// 管理端點：查看用戶統計
+app.get('/api/admin/stats', async (req, res) => {
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const providedPassword = req.query.password || req.headers['x-admin-password'];
+    
+    if (providedPassword !== adminPassword) {
+        return res.status(401).json({ error: 'Unauthorized: Admin password required' });
+    }
+    
+    res.json({
+        success: true,
+        stats: {
+            totalUsers: users.size,
+            totalSessions: sessions.size,
+            totalUserData: userData.size,
+            timestamp: new Date().toISOString()
+        }
+    });
+});
+
 // 健康檢查端點（用於 Render）
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
