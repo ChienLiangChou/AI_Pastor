@@ -2053,15 +2053,15 @@ If the user asks about topics outside your pastoral role, you MUST:
 
             return (
                 <div className="flex flex-col h-screen w-full max-w-4xl mx-auto shadow-2xl bg-gradient-to-b from-slate-900/95 via-slate-800/90 to-slate-900/95 overflow-hidden backdrop-blur-xl" style={{ width: '100%', maxWidth: '100%', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
-                    {/* 歡迎選擇 Modal */}
+                    {/* 歡迎選擇 Modal - 首次訪問必須選擇模式 */}
                     {showWelcomeModal && (
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => {
-                            // 只有在不是強制顯示的情況下才允許點擊背景關閉
-                            if (!forceShowWelcome && userState.hasSeenWelcome) {
-                                // 如果已經看過歡迎畫面，點擊背景不關閉，但可以顯示提示
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onClick={(e) => {
+                            // 首次訪問時不允許點擊背景關閉，必須選擇模式
+                            if (!userState.hasSeenWelcome) {
+                                e.stopPropagation();
                             }
                         }}>
-                            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-2xl w-full max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                                 <div className="p-6 sm:p-8">
                                     <div className="text-center mb-6">
                                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 mb-4 shadow-lg">
@@ -2071,74 +2071,126 @@ If the user asks about topics outside your pastoral role, you MUST:
                                         <p className="text-amber-200/80 text-sm sm:text-base">選擇您的使用方式</p>
                                     </div>
 
-                                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
                                         {/* 訪客模式卡片 */}
-                                        <div className="bg-slate-700/50 rounded-xl p-6 border-2 border-slate-600/50 hover:border-amber-500/50 transition-all">
+                                        <div className="bg-slate-700/50 rounded-xl p-5 sm:p-6 border-2 border-slate-600/50 hover:border-amber-500/50 transition-all flex flex-col">
                                             <div className="flex items-center mb-4">
-                                                <Icon name="user" size={24} className="text-amber-400 mr-3" />
+                                                <Icon name="user" size={24} className="text-amber-400 mr-3 flex-shrink-0" />
                                                 <h3 className="text-xl font-bold text-amber-50">訪客模式</h3>
                                             </div>
-                                            <ul className="space-y-2 text-sm text-amber-200/70 mb-4">
-                                                <li className="flex items-start">
-                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                    <span>立即使用，無需註冊</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                    <span>資料僅儲存在您的裝置</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <Icon name="x" size={16} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                    <span>僅限單一裝置使用</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <Icon name="x" size={16} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                    <span>最多保留最近 20 條對話</span>
-                                                </li>
-                                            </ul>
+                                            
+                                            {/* 優點 */}
+                                            <div className="mb-4 flex-1">
+                                                <p className="text-xs text-amber-300/80 font-semibold mb-2">✓ 適合快速體驗</p>
+                                                <ul className="space-y-2 text-sm text-amber-200/70 mb-3">
+                                                    <li className="flex items-start">
+                                                        <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                        <span>立即使用，無需註冊</span>
+                                                    </li>
+                                                    <li className="flex items-start">
+                                                        <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                        <span>資料僅儲存在您的裝置</span>
+                                                    </li>
+                                                    <li className="flex items-start">
+                                                        <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                        <span>隱私保護，不會上傳到伺服器</span>
+                                                    </li>
+                                                </ul>
+                                                
+                                                {/* 特殊限制 */}
+                                                <div className="mt-4 pt-3 border-t border-slate-600/50">
+                                                    <p className="text-xs text-amber-300/80 font-semibold mb-2">⚠️ 使用限制</p>
+                                                    <ul className="space-y-1.5 text-xs text-amber-200/60">
+                                                        <li className="flex items-start">
+                                                            <Icon name="info" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                            <span>僅限單一裝置使用，無法跨裝置同步</span>
+                                                        </li>
+                                                        <li className="flex items-start">
+                                                            <Icon name="info" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                            <span>最多保留最近 20 條對話記錄</span>
+                                                        </li>
+                                                        <li className="flex items-start">
+                                                            <Icon name="info" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                            <span>清除瀏覽器資料會遺失所有對話</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            
                                             <button
                                                 onClick={() => handleWelcomeChoice('guest')}
-                                                className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95"
+                                                className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 mt-auto"
                                             >
                                                 立即開始（訪客模式）
                                             </button>
                                         </div>
 
                                         {/* 註冊模式卡片 */}
-                                        <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 rounded-xl p-6 border-2 border-amber-500/50 hover:border-amber-400/70 transition-all">
+                                        <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 rounded-xl p-5 sm:p-6 border-2 border-amber-500/50 hover:border-amber-400/70 transition-all flex flex-col">
                                             <div className="flex items-center mb-4">
-                                                <Icon name="user-plus" size={24} className="text-amber-300 mr-3" />
+                                                <Icon name="user-plus" size={24} className="text-amber-300 mr-3 flex-shrink-0" />
                                                 <h3 className="text-xl font-bold text-amber-50">註冊帳號</h3>
+                                                <span className="ml-2 px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs rounded-full">推薦</span>
                                             </div>
-                                            <ul className="space-y-2 text-sm text-amber-200/70 mb-4">
-                                                <li className="flex items-start">
-                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                    <span>完整對話歷史儲存</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                    <span>多裝置同步</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                    <span>個人化記憶系統</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                    <span>屬靈成長追蹤</span>
-                                                </li>
-                                            </ul>
+                                            
+                                            {/* 優點 */}
+                                            <div className="mb-4 flex-1">
+                                                <p className="text-xs text-amber-300/80 font-semibold mb-2">✓ 完整功能體驗</p>
+                                                <ul className="space-y-2 text-sm text-amber-200/70 mb-3">
+                                                    <li className="flex items-start">
+                                                        <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                        <span>完整對話歷史儲存，永不遺失</span>
+                                                    </li>
+                                                    <li className="flex items-start">
+                                                        <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                        <span>多裝置同步，隨時隨地存取</span>
+                                                    </li>
+                                                    <li className="flex items-start">
+                                                        <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                        <span>個人化記憶系統，記住您的偏好</span>
+                                                    </li>
+                                                    <li className="flex items-start">
+                                                        <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                        <span>屬靈成長追蹤，記錄您的靈修歷程</span>
+                                                    </li>
+                                                </ul>
+                                                
+                                                {/* 特殊優勢 */}
+                                                <div className="mt-4 pt-3 border-t border-amber-500/30">
+                                                    <p className="text-xs text-amber-300/80 font-semibold mb-2">⭐ 獨特優勢</p>
+                                                    <ul className="space-y-1.5 text-xs text-amber-200/60">
+                                                        <li className="flex items-start">
+                                                            <Icon name="star" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                            <span>雲端備份，資料安全可靠</span>
+                                                        </li>
+                                                        <li className="flex items-start">
+                                                            <Icon name="star" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                            <span>無限制對話記錄，完整保存</span>
+                                                        </li>
+                                                        <li className="flex items-start">
+                                                            <Icon name="star" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
+                                                            <span>完全免費，無需付費</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            
                                             <button
                                                 onClick={() => handleWelcomeChoice('register')}
-                                                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95"
+                                                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 mt-auto"
                                             >
                                                 註冊帳號（免費）
                                             </button>
                                         </div>
                                     </div>
 
-                                    <div className="text-center text-xs text-amber-300/60">
-                                        <p>您可以隨時在設定中切換模式或升級帳號</p>
+                                    <div className="text-center space-y-2">
+                                        <p className="text-xs text-amber-300/60">
+                                            您可以隨時在設定中切換模式或升級帳號
+                                        </p>
+                                        <p className="text-xs text-amber-400/50">
+                                            💡 建議：首次使用建議選擇註冊模式，享受完整功能
+                                        </p>
                                     </div>
                                 </div>
                             </div>
