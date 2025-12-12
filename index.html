@@ -1691,10 +1691,33 @@ If the user asks about topics outside your pastoral role, you MUST:
             };
 
             const [userState, setUserState] = useState(loadUserState);
-            const [showWelcomeModal, setShowWelcomeModal] = useState(!userState.hasSeenWelcome);
+            // 檢查 URL 參數，如果有 ?showWelcome=true 則強制顯示歡迎畫面
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceShowWelcome = urlParams.get('showWelcome') === 'true';
+            const [showWelcomeModal, setShowWelcomeModal] = useState(forceShowWelcome || !userState.hasSeenWelcome);
             const [showAuthModal, setShowAuthModal] = useState(false);
+            const [showSettingsModal, setShowSettingsModal] = useState(false);
+            const [showConversationsModal, setShowConversationsModal] = useState(false);
+            const [showAdminModal, setShowAdminModal] = useState(false);
             const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
             const [authForm, setAuthForm] = useState({ email: '', username: '', password: '', nickname: '' });
+            const [showPassword, setShowPassword] = useState(false); // 顯示/隱藏密碼
+            
+            // 管理員相關狀態
+            const ADMIN_EMAIL = 'superkevinchou@gmail.com';
+            const isAdmin = userState.mode === 'registered' && userState.user?.email === ADMIN_EMAIL;
+            const [adminUsers, setAdminUsers] = useState([]);
+            const [adminStats, setAdminStats] = useState(null);
+            const [adminLoading, setAdminLoading] = useState(false);
+            const [adminSearchTerm, setAdminSearchTerm] = useState('');
+            const [selectedUser, setSelectedUser] = useState(null);
+            
+            // 更改密碼相關狀態
+            const [changePasswordForm, setChangePasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+            const [changingPassword, setChangingPassword] = useState(false);
+            const [showOldPassword, setShowOldPassword] = useState(false);
+            const [showNewPassword, setShowNewPassword] = useState(false);
+            const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
             // 處理瀏覽器返回按鈕 - 允許返回歡迎選擇界面
             useEffect(() => {
@@ -1774,16 +1797,27 @@ If the user asks about topics outside your pastoral role, you MUST:
 
             // 保存對話歷史
             useEffect(() => {
-                // 總是保存到 localStorage 作為備份
-                try {
-                    localStorage.setItem('ai-pastor-history', JSON.stringify(messages));
-                } catch (e) {
-                    console.warn('無法保存歷史記錄到本地', e);
-                }
-
-                // 如果是註冊用戶，同時保存到後端
-                if (userState.mode === 'registered' && userState.user?.token && messages.length > 0) {
-                    saveHistoryToBackend(userState.user.token, messages);
+                // 訪客模式：只保存到 localStorage（不會上傳到後端）
+                // 註冊模式：保存到 localStorage 和後端
+                if (userState.mode === 'guest') {
+                    // 訪客模式：只保存到本地，不保存到後端
+                    try {
+                        localStorage.setItem('ai-pastor-history', JSON.stringify(messages));
+                    } catch (e) {
+                        console.warn('無法保存歷史記錄到本地', e);
+                    }
+                } else if (userState.mode === 'registered' && userState.user?.token) {
+                    // 註冊模式：保存到本地和後端
+                    try {
+                        localStorage.setItem('ai-pastor-history', JSON.stringify(messages));
+                    } catch (e) {
+                        console.warn('無法保存歷史記錄到本地', e);
+                    }
+                    
+                    // 只保存註冊後的對話到後端（不保存訪客對話）
+                    if (messages.length > 0) {
+                        saveHistoryToBackend(userState.user.token, messages);
+                    }
                 }
             }, [messages, userState.mode, userState.user?.token]);
 
@@ -1849,14 +1883,22 @@ If the user asks about topics outside your pastoral role, you MUST:
                     setUserState(newState);
                     saveUserState(newState);
                     setShowWelcomeModal(false);
+                    // 清除 URL 參數（如果有）
+                    if (forceShowWelcome) {
+                        window.history.replaceState({}, '', window.location.pathname);
+                    }
                     // 添加歷史記錄，允許返回
-                    window.history.pushState({ step: 'main', choice: 'guest' }, '', window.location.href);
+                    window.history.pushState({ step: 'main', choice: 'guest' }, '', window.location.pathname);
                 } else if (choice === 'register') {
                     setShowWelcomeModal(false);
                     setShowAuthModal(true);
                     setAuthMode('register');
+                    // 清除 URL 參數（如果有）
+                    if (forceShowWelcome) {
+                        window.history.replaceState({}, '', window.location.pathname);
+                    }
                     // 添加歷史記錄，允許返回
-                    window.history.pushState({ step: 'auth', choice: 'register' }, '', window.location.href);
+                    window.history.pushState({ step: 'auth', choice: 'register' }, '', window.location.pathname);
                 }
             };
 
@@ -1913,10 +1955,16 @@ If the user asks about topics outside your pastoral role, you MUST:
                     setShowAuthModal(false);
                     setAuthForm({ email: '', username: '', password: '', nickname: '' });
 
-                    // 遷移 localStorage 數據到後端
+                    // 註冊時清除訪客模式的對話記錄（不儲存訪客對話）
                     if (authMode === 'register') {
-                        await migrateLocalDataToBackend(data.token);
-                        alert('註冊成功！您的對話記錄已同步到雲端。');
+                        // 清除 localStorage 中的訪客對話記錄
+                        try {
+                            localStorage.removeItem('ai-pastor-history');
+                            setMessages([]); // 清空當前對話
+                        } catch (e) {
+                            console.warn('清除訪客對話記錄失敗:', e);
+                        }
+                        alert('註冊成功！訪客時期的對話記錄已清除，新的對話將保存到雲端。');
                     } else {
                         // 登入時從後端載入歷史
                         await loadHistoryFromBackend(data.token);
@@ -1930,32 +1978,46 @@ If the user asks about topics outside your pastoral role, you MUST:
                 }
             };
 
-            // 遷移 localStorage 數據到後端
-            const migrateLocalDataToBackend = async (token) => {
+            // 注意：已移除 migrateLocalDataToBackend 函數
+            // 訪客模式的對話記錄不會被遷移到後端，確保不儲存任何訪客對話
+
+            // 載入管理員數據
+            const loadAdminData = async () => {
+                if (!isAdmin) return;
+                
+                setAdminLoading(true);
                 try {
-                    const localMessages = localStorage.getItem('ai-pastor-history');
-                    if (!localMessages) return;
-
-                    const messages = JSON.parse(localMessages);
-                    if (!Array.isArray(messages) || messages.length === 0) return;
-
-                    const apiUrl = API_BASE_URL ? `${API_BASE_URL}/api/user` : '/api/user';
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            token,
-                            type: 'migrate',
-                            data: { messages }
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok && data.success) {
-                        console.log(`成功遷移 ${data.migratedCount} 條對話記錄`);
+                    const apiUrl = API_BASE_URL || '';
+                    // 使用預設密碼（後端會從環境變數 ADMIN_PASSWORD 讀取，如果未設定則使用預設值）
+                    const adminPassword = 'admin123';
+                    
+                    // 獲取用戶列表
+                    const usersResponse = await fetch(`${apiUrl}/api/admin/users?password=${encodeURIComponent(adminPassword)}`);
+                    if (usersResponse.ok) {
+                        const usersData = await usersResponse.json();
+                        setAdminUsers(usersData.users || []);
+                    } else if (usersResponse.status === 401) {
+                        alert('管理員密碼驗證失敗。請確認後端環境變數 ADMIN_PASSWORD 設定正確。');
+                        return;
+                    } else {
+                        const errorData = await usersResponse.json().catch(() => ({ error: '未知錯誤' }));
+                        throw new Error(errorData.error || '載入用戶列表失敗');
+                    }
+                    
+                    // 獲取統計資訊
+                    const statsResponse = await fetch(`${apiUrl}/api/admin/stats?password=${encodeURIComponent(adminPassword)}`);
+                    if (statsResponse.ok) {
+                        const statsData = await statsResponse.json();
+                        setAdminStats(statsData.stats || null);
+                    } else if (statsResponse.status === 401) {
+                        // 如果用戶列表已載入，只警告統計資訊
+                        console.warn('統計資訊載入失敗：密碼驗證失敗');
                     }
                 } catch (error) {
-                    console.error('數據遷移失敗:', error);
+                    console.error('載入管理員數據失敗:', error);
+                    alert(`載入管理員數據失敗：${error.message || '請檢查後端連接'}`);
+                } finally {
+                    setAdminLoading(false);
                 }
             };
 
@@ -1993,7 +2055,12 @@ If the user asks about topics outside your pastoral role, you MUST:
                 <div className="flex flex-col h-screen w-full max-w-4xl mx-auto shadow-2xl bg-gradient-to-b from-slate-900/95 via-slate-800/90 to-slate-900/95 overflow-hidden backdrop-blur-xl" style={{ width: '100%', maxWidth: '100%', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
                     {/* 歡迎選擇 Modal */}
                     {showWelcomeModal && (
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => {}}>
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => {
+                            // 只有在不是強制顯示的情況下才允許點擊背景關閉
+                            if (!forceShowWelcome && userState.hasSeenWelcome) {
+                                // 如果已經看過歡迎畫面，點擊背景不關閉，但可以顯示提示
+                            }
+                        }}>
                             <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                                 <div className="p-6 sm:p-8">
                                     <div className="text-center mb-6">
@@ -2134,15 +2201,25 @@ If the user asks about topics outside your pastoral role, you MUST:
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-amber-200/80 mb-2">密碼</label>
-                                            <input
-                                                type="password"
-                                                value={authForm.password}
-                                                onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
-                                                className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-4 py-2.5 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
-                                                placeholder="請輸入密碼"
-                                                required
-                                                minLength={6}
-                                            />
+                                            <div className="relative">
+                                                <input
+                                                    type={showPassword ? "text" : "password"}
+                                                    value={authForm.password}
+                                                    onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
+                                                    className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-4 py-2.5 pr-12 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                                                    placeholder="請輸入密碼"
+                                                    required
+                                                    minLength={6}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-200/70 hover:text-amber-100 transition-colors p-1"
+                                                    aria-label={showPassword ? "隱藏密碼" : "顯示密碼"}
+                                                >
+                                                    <Icon name={showPassword ? "eye-off" : "eye"} size={20} />
+                                                </button>
+                                            </div>
                                         </div>
                                         <button
                                             type="submit"
@@ -2157,6 +2234,7 @@ If the user asks about topics outside your pastoral role, you MUST:
                                             onClick={() => {
                                                 setAuthMode(authMode === 'register' ? 'login' : 'register');
                                                 setAuthForm({ email: '', username: '', password: '', nickname: '' });
+                                                setShowPassword(false); // 重置密碼顯示狀態
                                             }}
                                             className="text-sm text-amber-300/70 hover:text-amber-200 transition-colors"
                                         >
@@ -2180,6 +2258,37 @@ If the user asks about topics outside your pastoral role, you MUST:
                             </div>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                            {/* 管理員按鈕（僅管理員可見） */}
+                            {isAdmin && (
+                                <button
+                                    onClick={() => {
+                                        setShowAdminModal(true);
+                                        loadAdminData();
+                                    }}
+                                    className="text-xs sm:text-sm text-red-300/90 hover:text-red-200 transition-all duration-200 px-1 sm:px-1.5 py-0.5 rounded-lg hover:bg-red-900/40 active:bg-red-900/60 active:scale-95 shrink-0 hover:shadow-md"
+                                    title="管理員面板"
+                                >
+                                    <Icon name="shield" size={12} className="sm:w-3.5 sm:h-3.5" />
+                                </button>
+                            )}
+                            {/* 對話管理按鈕（註冊用戶） */}
+                            {userState.mode === 'registered' && (
+                                <button
+                                    onClick={() => setShowConversationsModal(true)}
+                                    className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-all duration-200 px-1 sm:px-1.5 py-0.5 rounded-lg hover:bg-amber-800/40 active:bg-amber-800/60 active:scale-95 shrink-0 hover:shadow-md"
+                                    title="對話管理"
+                                >
+                                    <Icon name="message-square" size={12} className="sm:w-3.5 sm:h-3.5" />
+                                </button>
+                            )}
+                            {/* 設定按鈕 */}
+                            <button
+                                onClick={() => setShowSettingsModal(true)}
+                                className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-all duration-200 px-1 sm:px-1.5 py-0.5 rounded-lg hover:bg-amber-800/40 active:bg-amber-800/60 active:scale-95 shrink-0 hover:shadow-md"
+                                title="設定"
+                            >
+                                <Icon name="settings" size={12} className="sm:w-3.5 sm:h-3.5" />
+                            </button>
                             <span className="text-[10px] sm:text-xs text-amber-200/70 whitespace-nowrap hidden sm:inline">按這裡清除所有對話紀錄</span>
                             <button
                                 onClick={clearHistory}
@@ -2372,6 +2481,501 @@ If the user asks about topics outside your pastoral role, you MUST:
                             </button>
                         </form>
                     </div>
+
+                    {/* 設定 Modal */}
+                    {showSettingsModal && (
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowSettingsModal(false)}>
+                            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                                <div className="p-6 sm:p-8">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-amber-50 font-serif">設定</h2>
+                                        <button
+                                            onClick={() => setShowSettingsModal(false)}
+                                            className="text-amber-200/70 hover:text-amber-100 transition-colors"
+                                        >
+                                            <Icon name="x" size={24} />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {/* 用戶資訊 */}
+                                        {userState.mode === 'registered' && userState.user && (
+                                            <>
+                                                <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                                    <h3 className="text-lg font-semibold text-amber-50 mb-3">帳號資訊</h3>
+                                                    <div className="space-y-2 text-sm">
+                                                        <div>
+                                                            <span className="text-amber-200/70">Email:</span>
+                                                            <span className="text-amber-50 ml-2">{userState.user.email}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-amber-200/70">使用者名稱:</span>
+                                                            <span className="text-amber-50 ml-2">{userState.user.username}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-amber-200/70">暱稱:</span>
+                                                            <span className="text-amber-50 ml-2">{userState.user.nickname}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* 更改密碼 */}
+                                                <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                                    <h3 className="text-lg font-semibold text-amber-50 mb-3">更改密碼</h3>
+                                                    <form onSubmit={async (e) => {
+                                                        e.preventDefault();
+                                                        if (!changePasswordForm.oldPassword || !changePasswordForm.newPassword || !changePasswordForm.confirmPassword) {
+                                                            alert('請填寫所有欄位');
+                                                            return;
+                                                        }
+                                                        if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
+                                                            alert('新密碼與確認密碼不一致');
+                                                            return;
+                                                        }
+                                                        if (changePasswordForm.newPassword.length < 6) {
+                                                            alert('新密碼長度至少需要 6 個字元');
+                                                            return;
+                                                        }
+                                                        
+                                                        setChangingPassword(true);
+                                                        try {
+                                                            const apiUrl = API_BASE_URL ? `${API_BASE_URL}/api/auth` : '/api/auth';
+                                                            const response = await fetch(apiUrl, {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({
+                                                                    action: 'changePassword',
+                                                                    token: userState.user.token,
+                                                                    oldPassword: changePasswordForm.oldPassword,
+                                                                    newPassword: changePasswordForm.newPassword
+                                                                })
+                                                            });
+
+                                                            const data = await response.json();
+                                                            if (response.ok && data.success) {
+                                                                alert('密碼更改成功！');
+                                                                setChangePasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                                                                setShowOldPassword(false);
+                                                                setShowNewPassword(false);
+                                                                setShowConfirmPassword(false);
+                                                            } else {
+                                                                alert(data.error || '更改密碼失敗');
+                                                            }
+                                                        } catch (error) {
+                                                            console.error('更改密碼錯誤:', error);
+                                                            alert('更改密碼失敗，請稍後再試。');
+                                                        } finally {
+                                                            setChangingPassword(false);
+                                                        }
+                                                    }} className="space-y-3">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-amber-200/80 mb-2">目前密碼</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showOldPassword ? "text" : "password"}
+                                                                    value={changePasswordForm.oldPassword}
+                                                                    onChange={(e) => setChangePasswordForm({...changePasswordForm, oldPassword: e.target.value})}
+                                                                    className="w-full bg-slate-600/50 border border-slate-500/50 rounded-lg px-4 py-2.5 pr-12 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                                                                    placeholder="請輸入目前密碼"
+                                                                    required
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowOldPassword(!showOldPassword)}
+                                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-200/70 hover:text-amber-100 transition-colors p-1"
+                                                                    aria-label={showOldPassword ? "隱藏密碼" : "顯示密碼"}
+                                                                >
+                                                                    <Icon name={showOldPassword ? "eye-off" : "eye"} size={20} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-amber-200/80 mb-2">新密碼</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showNewPassword ? "text" : "password"}
+                                                                    value={changePasswordForm.newPassword}
+                                                                    onChange={(e) => setChangePasswordForm({...changePasswordForm, newPassword: e.target.value})}
+                                                                    className="w-full bg-slate-600/50 border border-slate-500/50 rounded-lg px-4 py-2.5 pr-12 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                                                                    placeholder="請輸入新密碼（至少 6 個字元）"
+                                                                    required
+                                                                    minLength={6}
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-200/70 hover:text-amber-100 transition-colors p-1"
+                                                                    aria-label={showNewPassword ? "隱藏密碼" : "顯示密碼"}
+                                                                >
+                                                                    <Icon name={showNewPassword ? "eye-off" : "eye"} size={20} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-amber-200/80 mb-2">確認新密碼</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showConfirmPassword ? "text" : "password"}
+                                                                    value={changePasswordForm.confirmPassword}
+                                                                    onChange={(e) => setChangePasswordForm({...changePasswordForm, confirmPassword: e.target.value})}
+                                                                    className="w-full bg-slate-600/50 border border-slate-500/50 rounded-lg px-4 py-2.5 pr-12 text-amber-50 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                                                                    placeholder="請再次輸入新密碼"
+                                                                    required
+                                                                    minLength={6}
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-200/70 hover:text-amber-100 transition-colors p-1"
+                                                                    aria-label={showConfirmPassword ? "隱藏密碼" : "顯示密碼"}
+                                                                >
+                                                                    <Icon name={showConfirmPassword ? "eye-off" : "eye"} size={20} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="submit"
+                                                            disabled={changingPassword}
+                                                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-2.5 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                        >
+                                                            {changingPassword ? (
+                                                                <>
+                                                                    <Icon name="loader" size={16} className="animate-spin" />
+                                                                    <span>更改中...</span>
+                                                                </>
+                                                            ) : (
+                                                                <span>更改密碼</span>
+                                                            )}
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {/* 模式說明 */}
+                                        <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                            <h3 className="text-lg font-semibold text-amber-50 mb-3">使用模式</h3>
+                                            <div className="text-sm text-amber-200/70">
+                                                {userState.mode === 'guest' ? (
+                                                    <div>
+                                                        <p className="mb-2">您目前使用 <strong className="text-amber-300">訪客模式</strong></p>
+                                                        <ul className="list-disc list-inside space-y-1 text-xs">
+                                                            <li>最多保留最近 20 條對話</li>
+                                                            <li>資料僅儲存在您的裝置</li>
+                                                            <li>無法跨裝置同步</li>
+                                                        </ul>
+                                                        <button
+                                                            onClick={() => {
+                                                                setShowSettingsModal(false);
+                                                                setShowAuthModal(true);
+                                                                setAuthMode('register');
+                                                            }}
+                                                            className="mt-3 w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 text-sm"
+                                                        >
+                                                            升級為註冊帳號
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <p className="mb-2">您目前使用 <strong className="text-green-400">註冊模式</strong></p>
+                                                        <ul className="list-disc list-inside space-y-1 text-xs">
+                                                            <li>完整對話歷史儲存</li>
+                                                            <li>多裝置同步</li>
+                                                            <li>個人化記憶系統</li>
+                                                            <li>屬靈成長追蹤</li>
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* 其他設定 */}
+                                        <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                            <h3 className="text-lg font-semibold text-amber-50 mb-3">其他</h3>
+                                            <button
+                                                onClick={() => {
+                                                    // 重置 hasSeenWelcome，讓歡迎畫面可以重新顯示
+                                                    const resetState = { ...userState, hasSeenWelcome: false };
+                                                    setUserState(resetState);
+                                                    saveUserState(resetState);
+                                                    setShowSettingsModal(false);
+                                                    setShowWelcomeModal(true);
+                                                }}
+                                                className="w-full text-left text-sm text-amber-200/70 hover:text-amber-100 py-2 px-3 rounded-lg hover:bg-slate-600/50 transition-colors"
+                                            >
+                                                重新選擇使用模式
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 對話管理 Modal（僅註冊用戶） */}
+                    {showConversationsModal && userState.mode === 'registered' && (
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowConversationsModal(false)}>
+                            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                                <div className="p-6 sm:p-8">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-amber-50 font-serif">對話管理</h2>
+                                        <button
+                                            onClick={() => setShowConversationsModal(false)}
+                                            className="text-amber-200/70 hover:text-amber-100 transition-colors"
+                                        >
+                                            <Icon name="x" size={24} />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-amber-50 font-semibold">目前對話</span>
+                                                <span className="text-xs text-amber-200/70">{messages.length} 條訊息</span>
+                                            </div>
+                                            <p className="text-sm text-amber-200/70 mb-3">
+                                                您的所有對話記錄已自動保存到雲端，可在任何裝置上存取。
+                                            </p>
+                                            <button
+                                                onClick={() => {
+                                                    if (window.confirm('確定要清除目前對話記錄嗎？')) {
+                                                        clearHistory();
+                                                        setShowConversationsModal(false);
+                                                    }
+                                                }}
+                                                className="w-full bg-red-600/80 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 text-sm"
+                                            >
+                                                清除目前對話
+                                            </button>
+                                        </div>
+
+                                        <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                            <h3 className="text-amber-50 font-semibold mb-2">資料同步</h3>
+                                            <p className="text-sm text-amber-200/70 mb-3">
+                                                您的對話記錄會自動同步到雲端。如果需要手動同步，請重新載入頁面。
+                                            </p>
+                                            <button
+                                                onClick={async () => {
+                                                    if (userState.user?.token) {
+                                                        try {
+                                                            await saveHistoryToBackend(userState.user.token, messages);
+                                                            alert('對話記錄已同步到雲端！');
+                                                        } catch (error) {
+                                                            alert('同步失敗，請稍後再試。');
+                                                        }
+                                                    }
+                                                }}
+                                                className="w-full bg-amber-600/80 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 text-sm"
+                                            >
+                                                立即同步到雲端
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 管理員面板 Modal（僅管理員可見） */}
+                    {showAdminModal && isAdmin && (
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => {
+                            setShowAdminModal(false);
+                            setSelectedUser(null);
+                            setAdminSearchTerm('');
+                        }}>
+                            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-red-500/30 max-w-6xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                                <div className="p-6 sm:p-8">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-red-400 font-serif flex items-center gap-2">
+                                                <Icon name="shield" size={24} />
+                                                管理員面板
+                                            </h2>
+                                            <p className="text-sm text-amber-200/70 mt-1">查看和管理所有註冊用戶</p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setShowAdminModal(false);
+                                                setSelectedUser(null);
+                                                setAdminSearchTerm('');
+                                            }}
+                                            className="text-amber-200/70 hover:text-amber-100 transition-colors"
+                                        >
+                                            <Icon name="x" size={24} />
+                                        </button>
+                                    </div>
+
+                                    {/* 統計資訊卡片 */}
+                                    {adminStats && (
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                            <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm text-amber-200/70">總用戶數</p>
+                                                        <p className="text-2xl font-bold text-amber-50 mt-1">{adminStats.totalUsers || 0}</p>
+                                                    </div>
+                                                    <Icon name="users" size={32} className="text-amber-400/50" />
+                                                </div>
+                                            </div>
+                                            <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm text-amber-200/70">活躍 Session</p>
+                                                        <p className="text-2xl font-bold text-amber-50 mt-1">{adminStats.totalSessions || 0}</p>
+                                                    </div>
+                                                    <Icon name="activity" size={32} className="text-amber-400/50" />
+                                                </div>
+                                            </div>
+                                            <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm text-amber-200/70">用戶數據</p>
+                                                        <p className="text-2xl font-bold text-amber-50 mt-1">{adminStats.totalUserData || 0}</p>
+                                                    </div>
+                                                    <Icon name="database" size={32} className="text-amber-400/50" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 搜尋和刷新 */}
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="flex-1 relative">
+                                            <Icon name="search" size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-200/50" />
+                                            <input
+                                                type="text"
+                                                placeholder="搜尋用戶（Email、使用者名稱、暱稱）..."
+                                                value={adminSearchTerm}
+                                                onChange={(e) => setAdminSearchTerm(e.target.value)}
+                                                className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-10 py-2 text-amber-50 placeholder-amber-200/30 focus:outline-none focus:border-amber-500/50"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={loadAdminData}
+                                            disabled={adminLoading}
+                                            className="px-4 py-2 bg-amber-600/80 hover:bg-amber-600 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        >
+                                            <Icon name={adminLoading ? "loader" : "refresh-cw"} size={16} className={adminLoading ? "animate-spin" : ""} />
+                                            {adminLoading ? '載入中...' : '刷新'}
+                                        </button>
+                                    </div>
+
+                                    {/* 用戶列表 */}
+                                    <div className="bg-slate-700/30 rounded-xl border border-slate-600/50 overflow-hidden">
+                                        {adminLoading ? (
+                                            <div className="p-8 text-center">
+                                                <Icon name="loader" size={32} className="animate-spin text-amber-400 mx-auto mb-2" />
+                                                <p className="text-amber-200/70">載入中...</p>
+                                            </div>
+                                        ) : adminUsers.length === 0 ? (
+                                            <div className="p-8 text-center">
+                                                <Icon name="users" size={32} className="text-amber-400/50 mx-auto mb-2" />
+                                                <p className="text-amber-200/70">目前沒有註冊用戶</p>
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full">
+                                                    <thead className="bg-slate-800/50">
+                                                        <tr>
+                                                            <th className="px-4 py-3 text-left text-xs font-semibold text-amber-200/80 uppercase tracking-wider">Email</th>
+                                                            <th className="px-4 py-3 text-left text-xs font-semibold text-amber-200/80 uppercase tracking-wider">使用者名稱</th>
+                                                            <th className="px-4 py-3 text-left text-xs font-semibold text-amber-200/80 uppercase tracking-wider">暱稱</th>
+                                                            <th className="px-4 py-3 text-left text-xs font-semibold text-amber-200/80 uppercase tracking-wider">註冊時間</th>
+                                                            <th className="px-4 py-3 text-left text-xs font-semibold text-amber-200/80 uppercase tracking-wider">操作</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-700/50">
+                                                        {adminUsers
+                                                            .filter(user => {
+                                                                if (!adminSearchTerm) return true;
+                                                                const search = adminSearchTerm.toLowerCase();
+                                                                return (
+                                                                    user.email?.toLowerCase().includes(search) ||
+                                                                    user.username?.toLowerCase().includes(search) ||
+                                                                    user.nickname?.toLowerCase().includes(search)
+                                                                );
+                                                            })
+                                                            .map((user, index) => (
+                                                                <tr key={user.email || index} className="hover:bg-slate-700/30 transition-colors">
+                                                                    <td className="px-4 py-3 text-sm text-amber-50">{user.email || '-'}</td>
+                                                                    <td className="px-4 py-3 text-sm text-amber-200/80">{user.username || '-'}</td>
+                                                                    <td className="px-4 py-3 text-sm text-amber-200/80">{user.nickname || '-'}</td>
+                                                                    <td className="px-4 py-3 text-sm text-amber-200/70">
+                                                                        {user.createdAt ? new Date(user.createdAt).toLocaleString('zh-TW', {
+                                                                            year: 'numeric',
+                                                                            month: '2-digit',
+                                                                            day: '2-digit',
+                                                                            hour: '2-digit',
+                                                                            minute: '2-digit'
+                                                                        }) : '-'}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 text-sm">
+                                                                        <button
+                                                                            onClick={() => setSelectedUser(selectedUser?.email === user.email ? null : user)}
+                                                                            className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
+                                                                        >
+                                                                            <Icon name={selectedUser?.email === user.email ? "chevron-up" : "chevron-down"} size={16} />
+                                                                            {selectedUser?.email === user.email ? '收起' : '詳情'}
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 用戶詳情展開 */}
+                                    {selectedUser && (
+                                        <div className="mt-4 bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                                            <h3 className="text-lg font-semibold text-amber-50 mb-3">用戶詳情</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-sm text-amber-200/70 mb-1">Email</p>
+                                                    <p className="text-amber-50">{selectedUser.email || '-'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-amber-200/70 mb-1">使用者名稱</p>
+                                                    <p className="text-amber-50">{selectedUser.username || '-'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-amber-200/70 mb-1">暱稱</p>
+                                                    <p className="text-amber-50">{selectedUser.nickname || '-'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-amber-200/70 mb-1">註冊時間</p>
+                                                    <p className="text-amber-50">
+                                                        {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleString('zh-TW') : '-'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-amber-200/70 mb-1">最後更新</p>
+                                                    <p className="text-amber-50">
+                                                        {selectedUser.updatedAt ? new Date(selectedUser.updatedAt).toLocaleString('zh-TW') : '-'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 顯示搜尋結果數量 */}
+                                    {adminSearchTerm && (
+                                        <div className="mt-4 text-sm text-amber-200/70 text-center">
+                                            找到 {adminUsers.filter(user => {
+                                                const search = adminSearchTerm.toLowerCase();
+                                                return (
+                                                    user.email?.toLowerCase().includes(search) ||
+                                                    user.username?.toLowerCase().includes(search) ||
+                                                    user.nickname?.toLowerCase().includes(search)
+                                                );
+                                            }).length} 個符合條件的用戶
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };

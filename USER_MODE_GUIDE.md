@@ -157,3 +157,7 @@ CREATE TABLE user_profiles (
 - [ ] 屬靈成長追蹤功能
 - [ ] 多裝置同步測試
 
+
+
+
+

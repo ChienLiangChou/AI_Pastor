@@ -10,5 +10,32 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
-    healthCheckPath: /api/chat
+      # Supabase 配置（可選）
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      # JWT 配置（建議設定）
+      - key: JWT_SECRET
+        sync: false
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 30d
+      # Email 通知配置（可選）
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      # 管理員配置（可選）
+      - key: ADMIN_PASSWORD
+        sync: false
+    healthCheckPath: /health
+
+
+
+
 

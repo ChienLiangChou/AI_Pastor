@@ -12,7 +12,13 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
+
+// 導入資料庫和認證模組
+const db = require('./lib/db');
+const { generateToken, verifyToken } = require('./lib/auth');
+const { checkConnection } = require('./lib/supabase');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,24 +30,130 @@ app.use(express.json());
 // 靜態檔案服務（提供 HTML）
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// ==================== 認證系統（內存儲存，臨時方案） ====================
-const users = new Map(); // email -> user data
-const sessions = new Map(); // token -> user email
-
-function generateToken(email) {
-    return `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-function verifyToken(token) {
-    if (!token || !token.startsWith('token_')) {
-        return null;
+// 檢查資料庫連接
+(async () => {
+    const connection = await checkConnection();
+    if (connection.connected) {
+        console.log('✅ Supabase 連接成功');
+    } else {
+        console.log('⚠️ Supabase 未配置或連接失敗，使用記憶體儲存');
+        console.log(`   錯誤: ${connection.error || '未配置'}`);
     }
-    const email = sessions.get(token);
-    return email ? { email, token } : null;
+})();
+
+// ==================== Email 通知功能 ====================
+// 建立 Email 傳送器（支援多種服務）
+function createEmailTransporter() {
+    // 優先使用 SendGrid（如果設定了 SENDGRID_API_KEY）
+    if (process.env.SENDGRID_API_KEY) {
+        return nodemailer.createTransport({
+            service: 'SendGrid',
+            auth: {
+                user: 'apikey',
+                pass: process.env.SENDGRID_API_KEY
+            }
+        });
+    }
+    
+    // 使用 Gmail SMTP（如果設定了 GMAIL_USER 和 GMAIL_APP_PASSWORD）
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+        return nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.GMAIL_USER,
+                pass: process.env.GMAIL_APP_PASSWORD
+            }
+        });
+    }
+    
+    // 使用自訂 SMTP（如果設定了 SMTP 相關環境變數）
+    if (process.env.SMTP_HOST) {
+        return nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT || 587,
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASSWORD
+            }
+        });
+    }
+    
+    // 如果沒有設定任何 Email 服務，返回 null
+    return null;
 }
 
-// ==================== 用戶數據存儲（內存儲存，臨時方案） ====================
-const userData = new Map(); // email -> user data
+// 發送註冊通知 Email
+async function sendRegistrationNotification(userEmail, username, nickname) {
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.NOTIFICATION_EMAIL;
+    
+    if (!adminEmail) {
+        console.log('⚠️ 未設定 ADMIN_EMAIL，跳過 Email 通知');
+        return false;
+    }
+    
+    const transporter = createEmailTransporter();
+    if (!transporter) {
+        console.log('⚠️ 未設定 Email 服務，跳過 Email 通知');
+        return false;
+    }
+    
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_FROM || `AI Pastor <${process.env.GMAIL_USER || 'noreply@ai-pastor.com'}>`,
+            to: adminEmail,
+            subject: '🎉 新用戶註冊 - AI 牧師',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #d97706;">新用戶註冊通知</h2>
+                    <p>有新的用戶註冊了 AI 牧師服務！</p>
+                    
+                    <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="margin-top: 0;">用戶資訊</h3>
+                        <p><strong>Email:</strong> ${userEmail}</p>
+                        <p><strong>使用者名稱:</strong> ${username}</p>
+                        <p><strong>暱稱:</strong> ${nickname || username}</p>
+                        <p><strong>註冊時間:</strong> ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</p>
+                    </div>
+                    
+                    <p style="color: #6b7280; font-size: 14px;">
+                        您可以透過管理端點查看所有註冊用戶：<br>
+                        <a href="https://ai-pastor-ealr.onrender.com/api/admin/users?password=您的管理員密碼">
+                            https://ai-pastor-ealr.onrender.com/api/admin/users
+                        </a>
+                    </p>
+                    
+                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+                    <p style="color: #9ca3af; font-size: 12px;">
+                        這是自動發送的系統通知，請勿直接回覆此郵件。
+                    </p>
+                </div>
+            `,
+            text: `
+新用戶註冊通知
+
+有新的用戶註冊了 AI 牧師服務！
+
+用戶資訊：
+- Email: ${userEmail}
+- 使用者名稱: ${username}
+- 暱稱: ${nickname || username}
+- 註冊時間: ${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}
+
+您可以透過管理端點查看所有註冊用戶：
+https://ai-pastor-ealr.onrender.com/api/admin/users?password=您的管理員密碼
+            `
+        };
+        
+        const info = await transporter.sendMail(mailOptions);
+        console.log('✅ 註冊通知 Email 已發送:', info.messageId);
+        return true;
+    } catch (error) {
+        console.error('❌ 發送 Email 通知失敗:', error);
+        // 不影響註冊流程，只記錄錯誤
+        return false;
+    }
+}
 
 // ==================== API 端點 ====================
 
@@ -198,36 +310,47 @@ app.post('/api/auth', async (req, res) => {
                 if (!email || !username || !password) {
                     return res.status(400).json({ error: 'Missing required fields' });
                 }
-                if (users.has(email)) {
-                    return res.status(409).json({ error: 'User already exists' });
+
+                try {
+                    const user = await db.createUser(email, username, password, nickname);
+                    const newToken = generateToken(email);
+                    await db.createSession(email, newToken);
+                    
+                    // 發送註冊通知 Email（非阻塞，不影響註冊流程）
+                    sendRegistrationNotification(user.email, user.username, user.nickname).catch(err => {
+                        console.error('Email 通知發送失敗（不影響註冊）:', err);
+                    });
+                    
+                    return res.status(201).json({
+                        success: true,
+                        user: { email: user.email, username: user.username, nickname: user.nickname },
+                        token: newToken
+                    });
+                } catch (error) {
+                    if (error.message === 'User already exists') {
+                        return res.status(409).json({ error: 'User already exists' });
+                    }
+                    throw error;
                 }
-                const user = {
-                    email,
-                    username,
-                    nickname: nickname || username,
-                    password, // TODO: 應使用 bcrypt 加密
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                users.set(email, user);
-                const newToken = generateToken(email);
-                sessions.set(newToken, email);
-                return res.status(201).json({
-                    success: true,
-                    user: { email: user.email, username: user.username, nickname: user.nickname },
-                    token: newToken
-                });
             
             case 'login':
                 if (!email || !password) {
                     return res.status(400).json({ error: 'Missing email or password' });
                 }
-                const loginUser = users.get(email);
-                if (!loginUser || loginUser.password !== password) {
+
+                const loginUser = await db.getUserByEmail(email);
+                if (!loginUser) {
                     return res.status(401).json({ error: 'Invalid email or password' });
                 }
+
+                const isValidPassword = await db.verifyPassword(loginUser, password);
+                if (!isValidPassword) {
+                    return res.status(401).json({ error: 'Invalid email or password' });
+                }
+
                 const loginToken = generateToken(email);
-                sessions.set(loginToken, email);
+                await db.createSession(email, loginToken);
+                
                 return res.status(200).json({
                     success: true,
                     user: { email: loginUser.email, username: loginUser.username, nickname: loginUser.nickname },
@@ -235,15 +358,17 @@ app.post('/api/auth', async (req, res) => {
                 });
             
             case 'logout':
-                if (token) sessions.delete(token);
+                if (token) {
+                    await db.deleteSession(token);
+                }
                 return res.status(200).json({ success: true, message: 'Logged out successfully' });
             
             case 'verify':
-                const session = verifyToken(token);
+                const session = await verifyToken(token);
                 if (!session) {
                     return res.status(401).json({ error: 'Invalid token' });
                 }
-                const verifyUser = users.get(session.email);
+                const verifyUser = await db.getUserByEmail(session.email);
                 if (!verifyUser) {
                     return res.status(404).json({ error: 'User not found' });
                 }
@@ -251,6 +376,34 @@ app.post('/api/auth', async (req, res) => {
                     success: true,
                     user: { email: verifyUser.email, username: verifyUser.username, nickname: verifyUser.nickname }
                 });
+            
+            case 'changePassword':
+                if (!token) {
+                    return res.status(401).json({ error: 'Token required' });
+                }
+                const changePasswordSession = await verifyToken(token);
+                if (!changePasswordSession) {
+                    return res.status(401).json({ error: 'Invalid token' });
+                }
+                const { oldPassword, newPassword } = req.body;
+                if (!oldPassword || !newPassword) {
+                    return res.status(400).json({ error: 'Old password and new password are required' });
+                }
+                if (newPassword.length < 6) {
+                    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+                }
+                try {
+                    await db.updatePassword(changePasswordSession.email, oldPassword, newPassword);
+                    return res.status(200).json({ success: true, message: 'Password updated successfully' });
+                } catch (error) {
+                    if (error.message === 'Invalid old password') {
+                        return res.status(401).json({ error: 'Invalid old password' });
+                    }
+                    if (error.message === 'User not found') {
+                        return res.status(404).json({ error: 'User not found' });
+                    }
+                    throw error;
+                }
             
             default:
                 return res.status(400).json({ error: 'Invalid action' });
@@ -266,19 +419,14 @@ app.get('/api/user', async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     
     const { token, type } = req.query;
-    const session = verifyToken(token);
+    const session = await verifyToken(token);
     
     if (!session) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const email = session.email;
-    const user = userData.get(email) || {
-        email,
-        messages: [],
-        profile: {},
-        spiritualGrowth: []
-    };
+    const user = await db.getUserData(email);
 
     switch (type) {
         case 'messages':
@@ -294,46 +442,36 @@ app.post('/api/user', async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     
     const { token, type, data } = req.body;
-    const session = verifyToken(token);
+    const session = await verifyToken(token);
     
     if (!session) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const email = session.email;
-    let user = userData.get(email) || {
-        email,
-        messages: [],
-        profile: {},
-        spiritualGrowth: [],
-        updatedAt: new Date().toISOString()
-    };
+    const existingUser = await db.getUserData(email);
 
     switch (type) {
         case 'messages':
-            user.messages = data.messages || [];
-            user.updatedAt = new Date().toISOString();
-            userData.set(email, user);
+            await db.saveUserData(email, {
+                ...existingUser,
+                messages: data.messages || []
+            });
             return res.status(200).json({ success: true, message: 'Messages saved successfully' });
         
         case 'profile':
-            user.profile = { ...user.profile, ...data.profile };
-            user.updatedAt = new Date().toISOString();
-            userData.set(email, user);
+            await db.saveUserData(email, {
+                ...existingUser,
+                profile: { ...existingUser.profile, ...data.profile }
+            });
             return res.status(200).json({ success: true, message: 'Profile updated successfully' });
         
         case 'migrate':
-            if (data.messages && Array.isArray(data.messages)) {
-                user.messages = [...(user.messages || []), ...data.messages];
-                user.updatedAt = new Date().toISOString();
-                userData.set(email, user);
-                return res.status(200).json({
-                    success: true,
-                    message: 'Data migrated successfully',
-                    migratedCount: data.messages.length
-                });
-            }
-            return res.status(400).json({ error: 'Invalid migration data' });
+            // 已禁用：不允許遷移訪客對話到後端
+            // 訪客模式的對話記錄不應該被儲存到伺服器
+            return res.status(403).json({ 
+                error: 'Migration disabled: Guest conversations are not stored on the server' 
+            });
         
         default:
             return res.status(400).json({ error: 'Invalid type' });
@@ -350,20 +488,37 @@ app.get('/api/admin/users', async (req, res) => {
         return res.status(401).json({ error: 'Unauthorized: Admin password required' });
     }
     
-    // 返回所有用戶（不包含密碼）
-    const usersList = Array.from(users.values()).map(user => ({
-        email: user.email,
-        username: user.username,
-        nickname: user.nickname,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-    }));
-    
-    res.json({
-        success: true,
-        totalUsers: usersList.length,
-        users: usersList
-    });
+    try {
+        // 從資料庫獲取所有用戶
+        const { supabase } = require('./lib/supabase');
+        let usersList = [];
+        
+        if (supabase) {
+            const { data, error } = await supabase
+                .from('users')
+                .select('email, username, nickname, created_at, updated_at')
+                .order('created_at', { ascending: false });
+            
+            if (!error && data) {
+                usersList = data.map(user => ({
+                    email: user.email,
+                    username: user.username,
+                    nickname: user.nickname,
+                    createdAt: user.created_at,
+                    updatedAt: user.updated_at
+                }));
+            }
+        }
+        
+        res.json({
+            success: true,
+            totalUsers: usersList.length,
+            users: usersList
+        });
+    } catch (error) {
+        console.error('獲取用戶列表失敗:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // 管理端點：查看用戶統計
@@ -375,15 +530,43 @@ app.get('/api/admin/stats', async (req, res) => {
         return res.status(401).json({ error: 'Unauthorized: Admin password required' });
     }
     
-    res.json({
-        success: true,
-        stats: {
-            totalUsers: users.size,
-            totalSessions: sessions.size,
-            totalUserData: userData.size,
+    try {
+        const { supabase } = require('./lib/supabase');
+        let stats = {
+            totalUsers: 0,
+            totalSessions: 0,
+            totalUserData: 0,
             timestamp: new Date().toISOString()
+        };
+        
+        if (supabase) {
+            // 獲取用戶數
+            const { count: userCount } = await supabase
+                .from('users')
+                .select('*', { count: 'exact', head: true });
+            stats.totalUsers = userCount || 0;
+            
+            // 獲取 session 數
+            const { count: sessionCount } = await supabase
+                .from('sessions')
+                .select('*', { count: 'exact', head: true });
+            stats.totalSessions = sessionCount || 0;
+            
+            // 獲取用戶數據數
+            const { count: dataCount } = await supabase
+                .from('user_data')
+                .select('*', { count: 'exact', head: true });
+            stats.totalUserData = dataCount || 0;
         }
-    });
+        
+        res.json({
+            success: true,
+            stats
+        });
+    } catch (error) {
+        console.error('獲取統計數據失敗:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // 健康檢查端點（用於 Render）

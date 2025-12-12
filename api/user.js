@@ -116,21 +116,18 @@ async function handlePost(req, res) {
             });
         
         case 'migrate':
-            // 從 localStorage 遷移數據
-            if (data.messages && Array.isArray(data.messages)) {
-                user.messages = [...(user.messages || []), ...data.messages];
-                user.updatedAt = new Date().toISOString();
-                userData.set(email, user);
-                return res.status(200).json({
-                    success: true,
-                    message: 'Data migrated successfully',
-                    migratedCount: data.messages.length
-                });
-            }
-            return res.status(400).json({ error: 'Invalid migration data' });
+            // 已禁用：不允許遷移訪客對話到後端
+            // 訪客模式的對話記錄不應該被儲存到伺服器
+            return res.status(403).json({ 
+                error: 'Migration disabled: Guest conversations are not stored on the server' 
+            });
         
         default:
             return res.status(400).json({ error: 'Invalid type' });
     }
 }
+
+
+
+
 

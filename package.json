@@ -7,7 +7,10 @@
     "build": "node build.js",
     "dev": "echo '直接開啟 index.html 即可開發，無需額外步驟'",
     "server": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "install-deps": "npm install",
+    "deploy": "./deploy-auto.sh",
+    "deploy:auto": "./deploy-auto.sh \"Auto deploy: $(date +'%Y-%m-%d %H:%M:%S')\""
   },
   "keywords": [
     "ai",
@@ -22,9 +25,13 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "duck-duck-scrape": "^2.2.7",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.1"
   }
 }
