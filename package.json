@@ -10,7 +10,8 @@
     "start": "node server.js",
     "install-deps": "npm install",
     "deploy": "./deploy-auto.sh",
-    "deploy:auto": "./deploy-auto.sh \"Auto deploy: $(date +'%Y-%m-%d %H:%M:%S')\""
+    "deploy:auto": "./deploy-auto.sh \"Auto deploy: $(date +'%Y-%m-%d %H:%M:%S')\"",
+    "test:datasources": "node test-datasources.js"
   },
   "keywords": [
     "ai",
@@ -26,12 +27,14 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "duck-duck-scrape": "^2.2.7",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.10.1"
+    "nodemailer": "^6.10.1",
+    "yahoo-finance2": "^3.10.2"
   }
 }
