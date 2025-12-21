@@ -2334,12 +2334,29 @@ If the user asks about topics outside your pastoral role, you MUST:
                 } catch (e) {
                     console.warn('無法載入歷史記錄', e);
                 }
+                // 使用當前語言載入歡迎訊息
+                const currentLang = language || loadLanguage();
                 return [
-                    { role: 'model', content: t('welcomeMessage.text') }
+                    { role: 'model', content: translations[currentLang]?.welcomeMessage?.text || translations['en'].welcomeMessage.text }
                 ];
             };
 
-            const [messages, setMessages] = useState(loadHistory);
+            const [messages, setMessages] = useState(() => {
+                // 初始化時使用當前語言
+                const currentLang = loadLanguage();
+                try {
+                    const saved = localStorage.getItem('ai-pastor-history');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        return userState.mode === 'guest' ? parsed.slice(-20) : parsed;
+                    }
+                } catch (e) {
+                    console.warn('無法載入歷史記錄', e);
+                }
+                return [
+                    { role: 'model', content: translations[currentLang]?.welcomeMessage?.text || translations['en'].welcomeMessage.text }
+                ];
+            });
             const [input, setInput] = useState('');
             const [isLoading, setIsLoading] = useState(false);
             const [mode, setMode] = useState('bible-only');
@@ -2350,6 +2367,22 @@ If the user asks about topics outside your pastoral role, you MUST:
             useEffect(() => {
                 setMessages(loadHistory());
             }, [userState.mode]);
+
+            // 當語言改變時，如果只有歡迎訊息，更新為新語言的歡迎訊息
+            useEffect(() => {
+                if (messages.length === 1 && messages[0].role === 'model') {
+                    // 檢查是否為歡迎訊息（通過檢查是否包含特定文字）
+                    const welcomeText = messages[0].content;
+                    const isWelcomeMessage = welcomeText.includes('願主與你同在') || 
+                                            welcomeText.includes('愿主与你同在') || 
+                                            welcomeText.includes('May the Lord be with you') ||
+                                            welcomeText.includes('AI Pastor') || 
+                                            welcomeText.includes('AI 牧師');
+                    if (isWelcomeMessage) {
+                        setMessages([{ role: 'model', content: t('welcomeMessage.text') }]);
+                    }
+                }
+            }, [language]);
 
             useEffect(() => {
                 lucide.createIcons();
@@ -2435,8 +2468,9 @@ If the user asks about topics outside your pastoral role, you MUST:
             const clearHistory = () => {
                 if (window.confirm(t('settings.clearHistory') + '?')) {
                     localStorage.removeItem('ai-pastor-history');
+                    const currentLang = language || loadLanguage();
                     setMessages([
-                        { role: 'model', content: t('welcomeMessage.text') }
+                        { role: 'model', content: translations[currentLang]?.welcomeMessage?.text || translations['en'].welcomeMessage.text }
                     ]);
                 }
             };
