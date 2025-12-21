@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1669,6 +1669,209 @@ If the user asks about topics outside your pastoral role, you MUST:
         };
 
         const App = () => {
+            // 翻譯字典
+            const translations = {
+                'en': {
+                    welcome: {
+                        title: 'Welcome to AI Pastor',
+                        subtitle: 'Choose your usage mode',
+                        guestMode: {
+                            title: 'Guest Mode',
+                            suitable: '✓ Perfect for quick experience',
+                            features: {
+                                immediate: 'Use immediately, no registration required',
+                                local: 'Data stored only on your device',
+                                privacy: 'Privacy protected, not uploaded to server'
+                            },
+                            limitations: {
+                                title: '⚠️ Usage Limitations',
+                                singleDevice: 'Single device only, no cross-device sync',
+                                limitedHistory: 'Maximum 20 recent conversation records',
+                                dataLoss: 'Clearing browser data will lose all conversations'
+                            },
+                            button: 'Start Now (Guest Mode)'
+                        },
+                        registerMode: {
+                            title: 'Register Account',
+                            recommended: 'Recommended',
+                            experience: '✓ Full feature experience',
+                            features: {
+                                history: 'Complete conversation history storage, never lost',
+                                sync: 'Multi-device sync, access anywhere',
+                                personalization: 'Personalized memory system, remembers your preferences',
+                                tracking: 'Spiritual growth tracking, records your devotional journey'
+                            },
+                            advantages: {
+                                title: '⭐ Unique Advantages',
+                                backup: 'Cloud backup, secure and reliable data',
+                                unlimited: 'Unlimited conversation records, complete preservation',
+                                free: 'Completely free, no payment required'
+                            },
+                            button: 'Register Account (Free)'
+                        },
+                        footer: {
+                            switch: 'You can switch modes or upgrade your account in settings at any time',
+                            suggestion: '💡 Suggestion: First-time users are recommended to choose registration mode for full features'
+                        }
+                    },
+                    language: {
+                        select: 'Select Language',
+                        english: 'English',
+                        traditional: 'Traditional Chinese',
+                        simplified: 'Simplified Chinese'
+                    },
+                    header: {
+                        backToWelcome: 'Back to Welcome'
+                    }
+                },
+                'zh-TW': {
+                    welcome: {
+                        title: '歡迎使用 AI 牧師',
+                        subtitle: '選擇您的使用方式',
+                        guestMode: {
+                            title: '訪客模式',
+                            suitable: '✓ 適合快速體驗',
+                            features: {
+                                immediate: '立即使用，無需註冊',
+                                local: '資料僅儲存在您的裝置',
+                                privacy: '隱私保護，不會上傳到伺服器'
+                            },
+                            limitations: {
+                                title: '⚠️ 使用限制',
+                                singleDevice: '僅限單一裝置使用，無法跨裝置同步',
+                                limitedHistory: '最多保留最近 20 條對話記錄',
+                                dataLoss: '清除瀏覽器資料會遺失所有對話'
+                            },
+                            button: '立即開始（訪客模式）'
+                        },
+                        registerMode: {
+                            title: '註冊帳號',
+                            recommended: '推薦',
+                            experience: '✓ 完整功能體驗',
+                            features: {
+                                history: '完整對話歷史儲存，永不遺失',
+                                sync: '多裝置同步，隨時隨地存取',
+                                personalization: '個人化記憶系統，記住您的偏好',
+                                tracking: '屬靈成長追蹤，記錄您的靈修歷程'
+                            },
+                            advantages: {
+                                title: '⭐ 獨特優勢',
+                                backup: '雲端備份，資料安全可靠',
+                                unlimited: '無限制對話記錄，完整保存',
+                                free: '完全免費，無需付費'
+                            },
+                            button: '註冊帳號（免費）'
+                        },
+                        footer: {
+                            switch: '您可以隨時在設定中切換模式或升級帳號',
+                            suggestion: '💡 建議：首次使用建議選擇註冊模式，享受完整功能'
+                        }
+                    },
+                    language: {
+                        select: '選擇語言',
+                        english: 'English',
+                        traditional: '繁體中文',
+                        simplified: '简体中文'
+                    },
+                    header: {
+                        backToWelcome: '返回歡迎頁面'
+                    }
+                },
+                'zh-CN': {
+                    welcome: {
+                        title: '欢迎使用 AI 牧师',
+                        subtitle: '选择您的使用方式',
+                        guestMode: {
+                            title: '访客模式',
+                            suitable: '✓ 适合快速体验',
+                            features: {
+                                immediate: '立即使用，无需注册',
+                                local: '资料仅储存在您的设备',
+                                privacy: '隐私保护，不会上传到服务器'
+                            },
+                            limitations: {
+                                title: '⚠️ 使用限制',
+                                singleDevice: '仅限单一设备使用，无法跨设备同步',
+                                limitedHistory: '最多保留最近 20 条对话记录',
+                                dataLoss: '清除浏览器资料会遗失所有对话'
+                            },
+                            button: '立即开始（访客模式）'
+                        },
+                        registerMode: {
+                            title: '注册账号',
+                            recommended: '推荐',
+                            experience: '✓ 完整功能体验',
+                            features: {
+                                history: '完整对话历史储存，永不遗失',
+                                sync: '多设备同步，随时随地存取',
+                                personalization: '个人化记忆系统，记住您的偏好',
+                                tracking: '属灵成长追踪，记录您的灵修历程'
+                            },
+                            advantages: {
+                                title: '⭐ 独特优势',
+                                backup: '云端备份，资料安全可靠',
+                                unlimited: '无限制对话记录，完整保存',
+                                free: '完全免费，无需付费'
+                            },
+                            button: '注册账号（免费）'
+                        },
+                        footer: {
+                            switch: '您可以随时在设定中切换模式或升级账号',
+                            suggestion: '💡 建议：首次使用建议选择注册模式，享受完整功能'
+                        }
+                    },
+                    language: {
+                        select: '选择语言',
+                        english: 'English',
+                        traditional: '繁體中文',
+                        simplified: '简体中文'
+                    },
+                    header: {
+                        backToWelcome: '返回欢迎页面'
+                    }
+                }
+            };
+
+            // 語言狀態管理
+            const loadLanguage = () => {
+                try {
+                    const saved = localStorage.getItem('ai-pastor-language');
+                    if (saved && ['en', 'zh-TW', 'zh-CN'].includes(saved)) {
+                        return saved;
+                    }
+                } catch (e) {
+                    console.warn('無法載入語言設定', e);
+                }
+                return 'en'; // 預設英文
+            };
+
+            const saveLanguage = (lang) => {
+                try {
+                    localStorage.setItem('ai-pastor-language', lang);
+                    // 更新 HTML lang 屬性
+                    document.documentElement.lang = lang;
+                } catch (e) {
+                    console.warn('無法保存語言設定', e);
+                }
+            };
+
+            const [language, setLanguage] = useState(loadLanguage);
+            
+            // 翻譯函數
+            const t = (key) => {
+                const keys = key.split('.');
+                let value = translations[language];
+                for (const k of keys) {
+                    value = value?.[k];
+                }
+                return value || key;
+            };
+
+            // 當語言改變時更新 HTML lang 屬性
+            React.useEffect(() => {
+                document.documentElement.lang = language;
+            }, [language]);
+
             // 用戶狀態管理
             const loadUserState = () => {
                 try {
@@ -1691,10 +1894,11 @@ If the user asks about topics outside your pastoral role, you MUST:
             };
 
             const [userState, setUserState] = useState(loadUserState);
-            // 檢查 URL 參數，如果有 ?showWelcome=true 則強制顯示歡迎畫面
+            // 檢查 URL 參數，如果有 ?showWelcome=false 則不顯示歡迎畫面
             const urlParams = new URLSearchParams(window.location.search);
-            const forceShowWelcome = urlParams.get('showWelcome') === 'true';
-            const [showWelcomeModal, setShowWelcomeModal] = useState(forceShowWelcome || !userState.hasSeenWelcome);
+            const forceHideWelcome = urlParams.get('showWelcome') === 'false';
+            // 方案一：每次訪問都顯示歡迎頁面（除非 URL 參數明確設置為 false）
+            const [showWelcomeModal, setShowWelcomeModal] = useState(!forceHideWelcome);
             const [showAuthModal, setShowAuthModal] = useState(false);
             const [showSettingsModal, setShowSettingsModal] = useState(false);
             const [showConversationsModal, setShowConversationsModal] = useState(false);
@@ -1883,20 +2087,12 @@ If the user asks about topics outside your pastoral role, you MUST:
                     setUserState(newState);
                     saveUserState(newState);
                     setShowWelcomeModal(false);
-                    // 清除 URL 參數（如果有）
-                    if (forceShowWelcome) {
-                        window.history.replaceState({}, '', window.location.pathname);
-                    }
                     // 添加歷史記錄，允許返回
                     window.history.pushState({ step: 'main', choice: 'guest' }, '', window.location.pathname);
                 } else if (choice === 'register') {
                     setShowWelcomeModal(false);
                     setShowAuthModal(true);
                     setAuthMode('register');
-                    // 清除 URL 參數（如果有）
-                    if (forceShowWelcome) {
-                        window.history.replaceState({}, '', window.location.pathname);
-                    }
                     // 添加歷史記錄，允許返回
                     window.history.pushState({ step: 'auth', choice: 'register' }, '', window.location.pathname);
                 }
@@ -2053,22 +2249,45 @@ If the user asks about topics outside your pastoral role, you MUST:
 
             return (
                 <div className="flex flex-col h-screen w-full max-w-4xl mx-auto shadow-2xl bg-gradient-to-b from-slate-900/95 via-slate-800/90 to-slate-900/95 overflow-hidden backdrop-blur-xl" style={{ width: '100%', maxWidth: '100%', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
-                    {/* 歡迎選擇 Modal - 首次訪問必須選擇模式 */}
+                    {/* 歡迎選擇 Modal - 每次訪問都顯示，可以選擇模式或關閉 */}
                     {showWelcomeModal && (
                         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onClick={(e) => {
-                            // 首次訪問時不允許點擊背景關閉，必須選擇模式
+                            // 如果還沒選擇過模式（首次訪問），必須選擇模式，不能點擊背景關閉
                             if (!userState.hasSeenWelcome) {
                                 e.stopPropagation();
+                            } else {
+                                // 如果已經選擇過模式，點擊背景可以關閉歡迎頁面
+                                setShowWelcomeModal(false);
                             }
                         }}>
                             <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-2xl w-full max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                                 <div className="p-6 sm:p-8">
+                                    {/* 語言選擇器 */}
+                                    <div className="flex justify-end mb-4">
+                                        <div className="relative">
+                                            <select
+                                                value={language}
+                                                onChange={(e) => {
+                                                    const newLang = e.target.value;
+                                                    setLanguage(newLang);
+                                                    saveLanguage(newLang);
+                                                }}
+                                                className="bg-slate-700/70 border border-amber-500/30 rounded-lg px-4 py-2 text-amber-50 text-sm font-medium focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 cursor-pointer appearance-none pr-8"
+                                                style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23fbbf24\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '12px' }}
+                                            >
+                                                <option value="en">English</option>
+                                                <option value="zh-TW">繁體中文</option>
+                                                <option value="zh-CN">简体中文</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
                                     <div className="text-center mb-6">
                                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 mb-4 shadow-lg">
                                             <Icon name="cross" size={32} className="text-white" />
                                         </div>
-                                        <h2 className="text-2xl sm:text-3xl font-bold text-amber-50 mb-2 font-serif">歡迎使用 AI 牧師</h2>
-                                        <p className="text-amber-200/80 text-sm sm:text-base">選擇您的使用方式</p>
+                                        <h2 className="text-2xl sm:text-3xl font-bold text-amber-50 mb-2 font-serif">{t('welcome.title')}</h2>
+                                        <p className="text-amber-200/80 text-sm sm:text-base">{t('welcome.subtitle')}</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
@@ -2076,42 +2295,42 @@ If the user asks about topics outside your pastoral role, you MUST:
                                         <div className="bg-slate-700/50 rounded-xl p-5 sm:p-6 border-2 border-slate-600/50 hover:border-amber-500/50 transition-all flex flex-col">
                                             <div className="flex items-center mb-4">
                                                 <Icon name="user" size={24} className="text-amber-400 mr-3 flex-shrink-0" />
-                                                <h3 className="text-xl font-bold text-amber-50">訪客模式</h3>
+                                                <h3 className="text-xl font-bold text-amber-50">{t('welcome.guestMode.title')}</h3>
                                             </div>
                                             
                                             {/* 優點 */}
                                             <div className="mb-4 flex-1">
-                                                <p className="text-xs text-amber-300/80 font-semibold mb-2">✓ 適合快速體驗</p>
+                                                <p className="text-xs text-amber-300/80 font-semibold mb-2">{t('welcome.guestMode.suitable')}</p>
                                                 <ul className="space-y-2 text-sm text-amber-200/70 mb-3">
                                                     <li className="flex items-start">
                                                         <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                        <span>立即使用，無需註冊</span>
+                                                        <span>{t('welcome.guestMode.features.immediate')}</span>
                                                     </li>
                                                     <li className="flex items-start">
                                                         <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                        <span>資料僅儲存在您的裝置</span>
+                                                        <span>{t('welcome.guestMode.features.local')}</span>
                                                     </li>
                                                     <li className="flex items-start">
                                                         <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                        <span>隱私保護，不會上傳到伺服器</span>
+                                                        <span>{t('welcome.guestMode.features.privacy')}</span>
                                                     </li>
                                                 </ul>
                                                 
                                                 {/* 特殊限制 */}
                                                 <div className="mt-4 pt-3 border-t border-slate-600/50">
-                                                    <p className="text-xs text-amber-300/80 font-semibold mb-2">⚠️ 使用限制</p>
+                                                    <p className="text-xs text-amber-300/80 font-semibold mb-2">{t('welcome.guestMode.limitations.title')}</p>
                                                     <ul className="space-y-1.5 text-xs text-amber-200/60">
                                                         <li className="flex items-start">
                                                             <Icon name="info" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                            <span>僅限單一裝置使用，無法跨裝置同步</span>
+                                                            <span>{t('welcome.guestMode.limitations.singleDevice')}</span>
                                                         </li>
                                                         <li className="flex items-start">
                                                             <Icon name="info" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                            <span>最多保留最近 20 條對話記錄</span>
+                                                            <span>{t('welcome.guestMode.limitations.limitedHistory')}</span>
                                                         </li>
                                                         <li className="flex items-start">
                                                             <Icon name="info" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                            <span>清除瀏覽器資料會遺失所有對話</span>
+                                                            <span>{t('welcome.guestMode.limitations.dataLoss')}</span>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -2121,7 +2340,7 @@ If the user asks about topics outside your pastoral role, you MUST:
                                                 onClick={() => handleWelcomeChoice('guest')}
                                                 className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 mt-auto"
                                             >
-                                                立即開始（訪客模式）
+                                                {t('welcome.guestMode.button')}
                                             </button>
                                         </div>
 
@@ -2129,47 +2348,47 @@ If the user asks about topics outside your pastoral role, you MUST:
                                         <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 rounded-xl p-5 sm:p-6 border-2 border-amber-500/50 hover:border-amber-400/70 transition-all flex flex-col">
                                             <div className="flex items-center mb-4">
                                                 <Icon name="user-plus" size={24} className="text-amber-300 mr-3 flex-shrink-0" />
-                                                <h3 className="text-xl font-bold text-amber-50">註冊帳號</h3>
-                                                <span className="ml-2 px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs rounded-full">推薦</span>
+                                                <h3 className="text-xl font-bold text-amber-50">{t('welcome.registerMode.title')}</h3>
+                                                <span className="ml-2 px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs rounded-full">{t('welcome.registerMode.recommended')}</span>
                                             </div>
                                             
                                             {/* 優點 */}
                                             <div className="mb-4 flex-1">
-                                                <p className="text-xs text-amber-300/80 font-semibold mb-2">✓ 完整功能體驗</p>
+                                                <p className="text-xs text-amber-300/80 font-semibold mb-2">{t('welcome.registerMode.experience')}</p>
                                                 <ul className="space-y-2 text-sm text-amber-200/70 mb-3">
                                                     <li className="flex items-start">
                                                         <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                        <span>完整對話歷史儲存，永不遺失</span>
+                                                        <span>{t('welcome.registerMode.features.history')}</span>
                                                     </li>
                                                     <li className="flex items-start">
                                                         <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                        <span>多裝置同步，隨時隨地存取</span>
+                                                        <span>{t('welcome.registerMode.features.sync')}</span>
                                                     </li>
                                                     <li className="flex items-start">
                                                         <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                        <span>個人化記憶系統，記住您的偏好</span>
+                                                        <span>{t('welcome.registerMode.features.personalization')}</span>
                                                     </li>
                                                     <li className="flex items-start">
                                                         <Icon name="check" size={16} className="text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                        <span>屬靈成長追蹤，記錄您的靈修歷程</span>
+                                                        <span>{t('welcome.registerMode.features.tracking')}</span>
                                                     </li>
                                                 </ul>
                                                 
                                                 {/* 特殊優勢 */}
                                                 <div className="mt-4 pt-3 border-t border-amber-500/30">
-                                                    <p className="text-xs text-amber-300/80 font-semibold mb-2">⭐ 獨特優勢</p>
+                                                    <p className="text-xs text-amber-300/80 font-semibold mb-2">{t('welcome.registerMode.advantages.title')}</p>
                                                     <ul className="space-y-1.5 text-xs text-amber-200/60">
                                                         <li className="flex items-start">
                                                             <Icon name="star" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                            <span>雲端備份，資料安全可靠</span>
+                                                            <span>{t('welcome.registerMode.advantages.backup')}</span>
                                                         </li>
                                                         <li className="flex items-start">
                                                             <Icon name="star" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                            <span>無限制對話記錄，完整保存</span>
+                                                            <span>{t('welcome.registerMode.advantages.unlimited')}</span>
                                                         </li>
                                                         <li className="flex items-start">
                                                             <Icon name="star" size={14} className="text-amber-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                            <span>完全免費，無需付費</span>
+                                                            <span>{t('welcome.registerMode.advantages.free')}</span>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -2179,17 +2398,17 @@ If the user asks about topics outside your pastoral role, you MUST:
                                                 onClick={() => handleWelcomeChoice('register')}
                                                 className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95 mt-auto"
                                             >
-                                                註冊帳號（免費）
+                                                {t('welcome.registerMode.button')}
                                             </button>
                                         </div>
                                     </div>
 
                                     <div className="text-center space-y-2">
                                         <p className="text-xs text-amber-300/60">
-                                            您可以隨時在設定中切換模式或升級帳號
+                                            {t('welcome.footer.switch')}
                                         </p>
                                         <p className="text-xs text-amber-400/50">
-                                            💡 建議：首次使用建議選擇註冊模式，享受完整功能
+                                            {t('welcome.footer.suggestion')}
                                         </p>
                                     </div>
                                 </div>
@@ -2333,6 +2552,16 @@ If the user asks about topics outside your pastoral role, you MUST:
                                     <Icon name="message-square" size={12} className="sm:w-3.5 sm:h-3.5" />
                                 </button>
                             )}
+                            {/* 返回歡迎頁面按鈕 */}
+                            <button
+                                onClick={() => {
+                                    setShowWelcomeModal(true);
+                                }}
+                                className="text-xs sm:text-sm text-amber-200/80 hover:text-amber-100 transition-all duration-200 px-1 sm:px-1.5 py-0.5 rounded-lg hover:bg-amber-800/40 active:bg-amber-800/60 active:scale-95 shrink-0 hover:shadow-md"
+                                title={t('header.backToWelcome')}
+                            >
+                                <Icon name="home" size={12} className="sm:w-3.5 sm:h-3.5" />
+                            </button>
                             {/* 設定按鈕 */}
                             <button
                                 onClick={() => setShowSettingsModal(true)}
