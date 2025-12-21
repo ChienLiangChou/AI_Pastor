@@ -1722,6 +1722,11 @@ If the user asks about topics outside your pastoral role, you MUST:
                     },
                     header: {
                         backToWelcome: 'Back to Welcome'
+                    },
+                    disclaimer: {
+                        title: 'Legal Disclaimer',
+                        view: 'View Disclaimer',
+                        close: 'Close'
                     }
                 },
                 'zh-TW': {
@@ -1775,6 +1780,11 @@ If the user asks about topics outside your pastoral role, you MUST:
                     },
                     header: {
                         backToWelcome: '返回歡迎頁面'
+                    },
+                    disclaimer: {
+                        title: '免責聲明',
+                        view: '查看免責聲明',
+                        close: '關閉'
                     }
                 },
                 'zh-CN': {
@@ -1828,6 +1838,11 @@ If the user asks about topics outside your pastoral role, you MUST:
                     },
                     header: {
                         backToWelcome: '返回欢迎页面'
+                    },
+                    disclaimer: {
+                        title: '免责声明',
+                        view: '查看免责声明',
+                        close: '关闭'
                     }
                 }
             };
@@ -1903,6 +1918,7 @@ If the user asks about topics outside your pastoral role, you MUST:
             const [showSettingsModal, setShowSettingsModal] = useState(false);
             const [showConversationsModal, setShowConversationsModal] = useState(false);
             const [showAdminModal, setShowAdminModal] = useState(false);
+            const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
             const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
             const [authForm, setAuthForm] = useState({ email: '', username: '', password: '', nickname: '' });
             const [showPassword, setShowPassword] = useState(false); // 顯示/隱藏密碼
@@ -2409,6 +2425,17 @@ If the user asks about topics outside your pastoral role, you MUST:
                                         </p>
                                         <p className="text-xs text-amber-400/50">
                                             {t('welcome.footer.suggestion')}
+                                        </p>
+                                        <p className="text-xs text-amber-300/40 mt-3 pt-3 border-t border-amber-500/20">
+                                            <button
+                                                onClick={() => {
+                                                    setShowWelcomeModal(false);
+                                                    setShowDisclaimerModal(true);
+                                                }}
+                                                className="text-amber-300/60 hover:text-amber-200/80 underline transition-colors"
+                                            >
+                                                {language === 'en' ? 'Legal Disclaimer' : language === 'zh-TW' ? '免責聲明' : '免责声明'}
+                                            </button>
                                         </p>
                                     </div>
                                 </div>
@@ -2973,20 +3000,192 @@ If the user asks about topics outside your pastoral role, you MUST:
                                         {/* 其他設定 */}
                                         <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
                                             <h3 className="text-lg font-semibold text-amber-50 mb-3">其他</h3>
-                                            <button
-                                                onClick={() => {
-                                                    // 重置 hasSeenWelcome，讓歡迎畫面可以重新顯示
-                                                    const resetState = { ...userState, hasSeenWelcome: false };
-                                                    setUserState(resetState);
-                                                    saveUserState(resetState);
-                                                    setShowSettingsModal(false);
-                                                    setShowWelcomeModal(true);
-                                                }}
-                                                className="w-full text-left text-sm text-amber-200/70 hover:text-amber-100 py-2 px-3 rounded-lg hover:bg-slate-600/50 transition-colors"
-                                            >
-                                                重新選擇使用模式
-                                            </button>
+                                            <div className="space-y-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setShowSettingsModal(false);
+                                                        setShowDisclaimerModal(true);
+                                                    }}
+                                                    className="w-full text-left text-sm text-amber-200/70 hover:text-amber-100 py-2 px-3 rounded-lg hover:bg-slate-600/50 transition-colors"
+                                                >
+                                                    {t('disclaimer.view')}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        // 重置 hasSeenWelcome，讓歡迎畫面可以重新顯示
+                                                        const resetState = { ...userState, hasSeenWelcome: false };
+                                                        setUserState(resetState);
+                                                        saveUserState(resetState);
+                                                        setShowSettingsModal(false);
+                                                        setShowWelcomeModal(true);
+                                                    }}
+                                                    className="w-full text-left text-sm text-amber-200/70 hover:text-amber-100 py-2 px-3 rounded-lg hover:bg-slate-600/50 transition-colors"
+                                                >
+                                                    重新選擇使用模式
+                                                </button>
+                                            </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 免責聲明 Modal */}
+                    {showDisclaimerModal && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowDisclaimerModal(false)}>
+                            <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 rounded-2xl shadow-2xl border-2 border-amber-500/30 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                                <div className="p-6 sm:p-8">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-amber-50 font-serif">{t('disclaimer.title')}</h2>
+                                        <button
+                                            onClick={() => setShowDisclaimerModal(false)}
+                                            className="text-amber-200/70 hover:text-amber-100 transition-colors"
+                                        >
+                                            <Icon name="x" size={24} />
+                                        </button>
+                                    </div>
+
+                                    <div className="prose prose-invert max-w-none text-amber-50/90 text-sm leading-relaxed">
+                                        {language === 'en' ? (
+                                            <div className="space-y-4">
+                                                <p className="font-bold text-amber-200">BY USING AI PASTOR, YOU ACKNOWLEDGE AND AGREE TO THE FOLLOWING DISCLAIMERS:</p>
+                                                
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">No Professional Advice</h3>
+                                                    <p>AI Pastor is provided for informational and educational purposes only. It does not constitute professional pastoral counseling, medical/psychiatric/psychological advice, legal advice, financial advice, professional therapy, or emergency services.</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">Not a Replacement for Professional Services</h3>
+                                                    <p>AI Pastor cannot and should never replace consultation with licensed healthcare professionals, legal counsel, financial advisors, professional mental health therapy, emergency services (call 911), or personal pastoral counseling from real pastors.</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">Use at Your Own Risk</h3>
+                                                    <ul className="list-disc list-inside space-y-1 ml-4">
+                                                        <li>AI responses may contain errors - AI technology is not perfect</li>
+                                                        <li>AI Pastor is provided "as is" without warranties of any kind</li>
+                                                        <li>Users are solely responsible for evaluating the accuracy of AI responses</li>
+                                                        <li>The developer assumes no liability for decisions made based on AI responses</li>
+                                                    </ul>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">Limitation of Liability</h3>
+                                                    <p>To the fullest extent permitted by law, the developer disclaims all liability for any damages, losses, or injuries arising from use of AI Pastor. The developer is not responsible for any consequences resulting from reliance on AI-generated responses and does not guarantee the accuracy, completeness, or suitability of any information provided.</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">Emergency Situations</h3>
+                                                    <p className="font-bold text-red-300">If you are experiencing a crisis or emergency, call 911 or your local emergency services immediately. Do not rely solely on AI Pastor for emergency situations.</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">User Agreement</h3>
+                                                    <p>By using AI Pastor, you agree that you understand AI Pastor is an experimental tool and may contain errors, you will not hold the developer liable for any outcomes, you will seek appropriate professional help when needed, and you use this service at your own risk and discretion.</p>
+                                                </div>
+
+                                                <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600/50">
+                                                    <p className="font-semibold text-amber-200">Acceptance of Terms: Your use of AI Pastor constitutes acceptance of this disclaimer. If you do not agree to these terms, please do not use AI Pastor.</p>
+                                                </div>
+                                            </div>
+                                        ) : language === 'zh-TW' ? (
+                                            <div className="space-y-4">
+                                                <p className="font-bold text-amber-200">使用 AI 牧師即表示您承認並同意以下免責聲明：</p>
+                                                
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">無專業建議</h3>
+                                                    <p>AI 牧師僅供資訊和教育用途。不構成專業牧師輔導、醫療/精神/心理建議、法律建議、財務建議、專業治療或緊急服務。</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">不能替代專業服務</h3>
+                                                    <p>AI 牧師不能且不應替代與持牌醫療專業人員的諮詢、法律顧問、財務顧問、專業心理健康治療、緊急服務（撥打 119），或真實牧師的個人牧師輔導。</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">使用風險自負</h3>
+                                                    <ul className="list-disc list-inside space-y-1 ml-4">
+                                                        <li>AI 回應可能包含錯誤 - AI 技術並不完美</li>
+                                                        <li>AI 牧師以「現狀」提供，不提供任何形式的保證</li>
+                                                        <li>用戶需自行負責評估 AI 回應的準確性</li>
+                                                        <li>開發者不對基於 AI 回應做出的決定承擔任何責任</li>
+                                                    </ul>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">責任限制</h3>
+                                                    <p>在法律允許的最大範圍內，開發者不承擔因使用 AI 牧師而產生的任何損害、損失或傷害的責任。開發者不對依賴 AI 生成回應而產生的任何後果負責，也不保證所提供資訊的準確性、完整性或適用性。</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">緊急情況</h3>
+                                                    <p className="font-bold text-red-300">如果您遇到危機或緊急情況，請立即撥打 119 或當地緊急服務。不要僅依賴 AI 牧師處理緊急情況。</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">用戶協議</h3>
+                                                    <p>使用 AI 牧師即表示您同意：您理解 AI 牧師是實驗性工具且可能包含錯誤，您不會要求開發者對任何結果負責，您會在需要時尋求適當的專業幫助，並且您自行承擔使用此服務的風險。</p>
+                                                </div>
+
+                                                <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600/50">
+                                                    <p className="font-semibold text-amber-200">接受條款：您使用 AI 牧師即表示接受此免責聲明。如果您不同意這些條款，請勿使用 AI 牧師。</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                <p className="font-bold text-amber-200">使用 AI 牧师即表示您承认并同意以下免责声明：</p>
+                                                
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">无专业建议</h3>
+                                                    <p>AI 牧师仅供资讯和教育用途。不构成专业牧师辅导、医疗/精神/心理建议、法律建议、财务建议、专业治疗或紧急服务。</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">不能替代专业服务</h3>
+                                                    <p>AI 牧师不能且不应替代与持牌医疗专业人员的咨询、法律顾问、财务顾问、专业心理健康治疗、紧急服务（拨打 119），或真实牧师的个人牧师辅导。</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">使用风险自负</h3>
+                                                    <ul className="list-disc list-inside space-y-1 ml-4">
+                                                        <li>AI 回应可能包含错误 - AI 技术并不完美</li>
+                                                        <li>AI 牧师以「现状」提供，不提供任何形式的保证</li>
+                                                        <li>用户需自行负责评估 AI 回应的准确性</li>
+                                                        <li>开发者不对基于 AI 回应做出的决定承担任何责任</li>
+                                                    </ul>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">责任限制</h3>
+                                                    <p>在法律允许的最大范围内，开发者不承担因使用 AI 牧师而产生的任何损害、损失或伤害的责任。开发者不对依赖 AI 生成回应而产生的任何后果负责，也不保证所提供资讯的准确性、完整性或适用性。</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">紧急情况</h3>
+                                                    <p className="font-bold text-red-300">如果您遇到危机或紧急情况，请立即拨打 119 或当地紧急服务。不要仅依赖 AI 牧师处理紧急情况。</p>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-100 mb-2">用户协议</h3>
+                                                    <p>使用 AI 牧师即表示您同意：您理解 AI 牧师是实验性工具且可能包含错误，您不会要求开发者对任何结果负责，您会在需要时寻求适当的专业帮助，并且您自行承担使用此服务的风险。</p>
+                                                </div>
+
+                                                <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600/50">
+                                                    <p className="font-semibold text-amber-200">接受条款：您使用 AI 牧师即表示接受此免责声明。如果您不同意这些条款，请勿使用 AI 牧师。</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-6 flex justify-end">
+                                        <button
+                                            onClick={() => setShowDisclaimerModal(false)}
+                                            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-2 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-95"
+                                        >
+                                            {t('disclaimer.close')}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
