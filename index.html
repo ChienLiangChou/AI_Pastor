@@ -1850,6 +1850,9 @@ If the user asks about topics outside your pastoral role, you MUST:
                         title: 'Legal Disclaimer',
                         view: 'View Disclaimer',
                         close: 'Close'
+                    },
+                    welcomeMessage: {
+                        text: 'May the Lord be with you. I am your AI Pastor. Whatever questions you have in your heart, or if you seek the truth of the Bible, please tell me.\n\nYou can choose to answer only with the Bible, or combine historical and internet data. How can I help you today?'
                     }
                 },
                 'zh-TW': {
@@ -2326,7 +2329,7 @@ If the user asks about topics outside your pastoral role, you MUST:
                     console.warn('無法載入歷史記錄', e);
                 }
                 return [
-                    { role: 'model', content: '願主與你同在。我是你的 AI 牧師。無論你心中有什麼疑問，或想尋求聖經的真理，都請告訴我。\n\n你可以選擇僅用聖經回答，或是結合歷史與網路資料。請問今天有什麼可以幫助你的？' }
+                    { role: 'model', content: t('welcomeMessage.text') }
                 ];
             };
 
@@ -2427,7 +2430,7 @@ If the user asks about topics outside your pastoral role, you MUST:
                 if (window.confirm(t('settings.clearHistory') + '?')) {
                     localStorage.removeItem('ai-pastor-history');
                     setMessages([
-                        { role: 'model', content: '願主與你同在。我是你的 AI 牧師。無論你心中有什麼疑問，或想尋求聖經的真理，都請告訴我。\n\n你可以選擇僅用聖經回答，或是結合歷史與網路資料。請問今天有什麼可以幫助你的？' }
+                        { role: 'model', content: t('welcomeMessage.text') }
                     ]);
                 }
             };
