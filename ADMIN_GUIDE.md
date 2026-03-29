@@ -173,6 +173,82 @@ https://ai-pastor-ealr.onrender.com/api/admin/users?password=admin123
 
 ---
 
+## 📈 數據源配置指南
+
+### 時間序列數據功能
+
+系統現在支援查詢財經和天氣相關的時間序列數據。
+
+#### 環境變數配置
+
+在 `.env` 文件或 Render 環境變數中添加：
+
+```bash
+# Alpha Vantage API Key (可選，用於增強財經數據)
+ALPHAVANTAGE_KEY=your_alpha_vantage_api_key
+
+# Weather API Key (可選，用於增強天氣數據)
+WEATHER_API_KEY=your_weather_api_key
+
+# 預設查詢地點 (可選)
+DEFAULT_LOCATION=taipei
+```
+
+#### 如何取得 API Keys
+
+1. **Alpha Vantage** (財經數據，可選)
+   - 網址：https://www.alphavantage.co/support/#api-key
+   - 提供免費方案
+   - 用於增強財經數據查詢
+
+2. **WeatherAPI** (天氣數據，可選)
+   - 網址：https://www.weatherapi.com/
+   - 提供免費方案（每月100萬次請求）
+   - 用於增強天氣數據查詢
+   - 注意：系統已內建 Open-Meteo 免費 API，此為可選增強
+
+#### 支援的查詢類型
+
+**財經數據：**
+- 台股加權指數、上證指數、恆生指數、日經指數
+- NASDAQ、道瓊、標普500等國際指數
+- 自動返回≥2倍查詢時間範圍的數據點
+
+**天氣數據：**
+- 全球主要城市溫度數據
+- 台北、東京、北京、上海、香港、首爾、新加坡等
+- 溫度統一使用攝氏溫度（°C）
+
+#### 使用範例
+
+```javascript
+const { fetchTimeSeries } = require('./services/dataSources');
+
+// 查詢台股指數（30天數據，返回≥60個數據點）
+const financeData = await fetchTimeSeries({ 
+  query: '台股加權指數', 
+  horizonDays: 30 
+});
+
+// 查詢台北氣溫（14天數據，返回≥28個數據點）
+const weatherData = await fetchTimeSeries({ 
+  query: '台北氣溫', 
+  horizonDays: 14 
+});
+```
+
+#### 錯誤處理
+
+系統會區分兩種錯誤類型：
+1. `UnrecognizedTopicError` - 無法識別查詢主題
+2. `SourceUnavailableError` - 數據源暫時不可用（網路問題、API限制等）
+
+API 端點應根據錯誤類型返回適當的 HTTP 狀態碼：
+- `UnrecognizedTopicError` → 400 Bad Request
+- `SourceUnavailableError` → 503 Service Unavailable
+
+---
+
 ## 📊 下一步建議
 
 1. **立即行動**：設定 `ADMIN_PASSWORD` 環境變數
