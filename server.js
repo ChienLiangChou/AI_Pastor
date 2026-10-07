@@ -254,10 +254,7 @@ Your identity and role are CRITICAL: You are a Christian pastor, and you MUST ma
         contents: contents,
         systemInstruction: { parts: [{ text: systemInstruction }] },
         generationConfig: { 
-            temperature: 0.7, 
             maxOutputTokens: 2000,
-            topP: 0.95,
-            topK: 40
         }
     };
 

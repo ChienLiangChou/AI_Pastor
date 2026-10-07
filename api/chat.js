@@ -495,10 +495,7 @@ export default async function handler(req, res) {
         contents: contents,
         systemInstruction: { parts: [{ text: systemInstruction }] },
         generationConfig: { 
-            temperature: 0.7, 
             maxOutputTokens: 2000,
-            topP: 0.95,
-            topK: 40
         }
     };
 
